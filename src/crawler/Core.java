@@ -1,10 +1,7 @@
 package crawler;
 
 import models.Article;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.IOException;
 
@@ -12,7 +9,9 @@ import java.io.IOException;
  * Created by saeed on 1/4/2016.
  */
 public class Core {
-    public static final int REQUIRED_DOC_COUNT = 1000;
+    public static final int REQUIRED_DOC_COUNT = 1;
+    String BASE_URL = "https://www.researchgate.net/";
+    int nextDocId = 1;
     Downloader downloader;
     ItemPipeline itemPipeline;
     Parser parser;
@@ -31,6 +30,15 @@ public class Core {
     }
 
     public boolean isDone() {
-        return itemPipeline.count < REQUIRED_DOC_COUNT;
+        return nextDocId < REQUIRED_DOC_COUNT;
+    }
+
+    String getAbsoluteUrl(String url) {
+        return BASE_URL + url;
+    }
+
+    public void addArticle(String url, String title, String abstraction) {
+        Article article = new Article(title, url, nextDocId, abstraction);
+        nextDocId++;
     }
 }

@@ -2,19 +2,14 @@ package crawler;
 
 import com.sun.istack.internal.Nullable;
 import models.Article;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,29 +43,30 @@ public class Downloader {
     }
 
     void run() throws InterruptedException, IOException {
-        Article article;
+        String url;
         String articleUrl;
         String pubId;
         Document doc;
-        article = mCore.scheduler.getNextArticle();
-        while (article != null && !mCore.isDone()) {
-            System.out.println("downloading article: " + article.getTitle());
-            articleUrl = article.getAbsoluteUrl();
-            pubId = getPublicationId(articleUrl);
-//                doc = getArticlePage(article);
-            getReferences(articleUrl, pubId);
-            getCitations(articleUrl, pubId);
-            article = mCore.scheduler.getNextArticle();
+        url = mCore.scheduler.getNextUrl();
+        while (url != null && !mCore.isDone()) {
+            System.out.println("downloading article: " + url);
+            pubId = getPublicationId(url);
+            doc = getArticlePage(url);
+            System.out.println(doc);
+            mCore.parser.parseDoc(url, doc);
+            getReferences(url, pubId);
+            getCitations(url, pubId);
+            url = mCore.scheduler.getNextUrl();
         }
     }
 
     @Nullable
-    public Document getArticlePage(Article article) {
+    public Document getArticlePage(String url) {
         try {
-            return Jsoup.connect(article.getAbsoluteUrl()).get();
+            return Jsoup.connect(url).get();
         } catch (IOException e) {
             System.out.println("time_out_in: link. the article had been added to the list again!");
-            mCore.scheduler.addArticle(article);
+            mCore.scheduler.addUrl(url);
             return null;
         }
     }

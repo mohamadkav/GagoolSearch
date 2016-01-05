@@ -3,7 +3,6 @@ package crawler;
 import com.sun.istack.internal.Nullable;
 import models.Article;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -12,10 +11,10 @@ import java.util.Queue;
  */
 public class Scheduler {
     private static Scheduler mInstance = new Scheduler();
-    private Queue<Article> articles;
+    private Queue<String> urls;
 
     private Scheduler() {
-        articles = new LinkedList<>();
+        urls = new LinkedList<>();
     }
 
     public static Scheduler getInstance() {
@@ -25,15 +24,15 @@ public class Scheduler {
         return mInstance;
     }
 
-    public void addArticle(Article article) {
-        articles.add(article);
+    public void addUrl(String url) {
+        urls.add(url);
     }
 
     /**
      * @return next article or null if there is no article left!
      */
     @Nullable
-    public Article getNextArticle() {
-        return articles.poll();
+    public String getNextUrl() {
+        return urls.poll();
     }
 }

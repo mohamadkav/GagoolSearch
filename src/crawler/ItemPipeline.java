@@ -2,7 +2,6 @@ package crawler;
 
 import models.Article;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -11,7 +10,6 @@ import java.util.HashMap;
 public class ItemPipeline {
     private static ItemPipeline mInstance;
     private Core mCore;
-    int count;
     HashMap<String, Boolean> seenUrls;
 
     private ItemPipeline(Core core) {
@@ -26,18 +24,13 @@ public class ItemPipeline {
         return mInstance;
     }
 
-    public void processArticle(Article article) {
-
-    }
-
-    public void addArticle(Article article) {
-        Boolean seen = seenUrls.get(article.getAbsoluteUrl());
+    public void addUrl(String url) {
+        Boolean seen = seenUrls.get(mCore.getAbsoluteUrl(url));
         if (seen != null) {
-            System.out.println("TEKRARI>>>>> " + article.getAbsoluteUrl());
+            System.out.println("TEKRARI>>>>> " + mCore.getAbsoluteUrl(url));
         } else {
-            mCore.scheduler.addArticle(article);
-            count++;
-            seenUrls.put(article.getAbsoluteUrl(), true);
+            mCore.scheduler.addUrl(mCore.getAbsoluteUrl(url));
+            seenUrls.put(mCore.getAbsoluteUrl(url), true);
         }
 //        throw new RuntimeException("IN CONSTRUCTION");
     }

@@ -6,10 +6,6 @@ import com.google.gson.JsonParser;
 import models.Article;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -41,9 +37,18 @@ public class Parser {
         Elements listOfFirstDocsHeaders = getListOfFirstDocsHeaders(doc);
         for (int i = 0; i < ((listOfFirstDocsHeaders.size() > 10) ? 10 : listOfFirstDocsHeaders.size()); i++) {
             Element header = listOfFirstDocsHeaders.get(i);
-            Article article = processHeaders(header);
-            mCore.itemPipeline.addArticle(article);
+            String url = processHeaders(header);
+            mCore.itemPipeline.addUrl(url);
         }
+    }
+
+    public void parseDoc(String url, Document doc) {
+        Element element = doc.select(".pub-abstract div div").first();
+        String docPreString = element.html();
+        String abstraction = docPreString.replace("\n<br>", "");
+        element = doc.select(".pub-title").first();
+        mCore.addArticle(url, element.html(), abstraction);
+//        System.out.println(docString);
     }
 
     private Elements getListOfFirstDocsHeaders(Document doc) {
@@ -52,12 +57,10 @@ public class Parser {
     }
 
 
-    private Article processHeaders(Element header) {
+    private String processHeaders(Element header) {
         Element headerLink = header.getElementsByTag("a").first();
         String title = headerLink.getElementsByTag("span").first().html();
-        String url = headerLink.attr("href");
-        return new Article(title, url);
-
+        return headerLink.attr("href");
     }
 
     public void parseCiteRefResponse(HttpResponse httpResponse) {
@@ -65,7 +68,7 @@ public class Parser {
             String response = buildResponseFromEntity(httpResponse.getEntity());
             ArrayList<String[]> citations = parseCitationsJson(response);
             for (String[] citation : citations) {
-                mCore.itemPipeline.addArticle(new Article(citation[0], citation[1]));
+                mCore.itemPipeline.addUrl(citation[1]);
             }
         } catch (IOException e) {
             e.printStackTrace();
