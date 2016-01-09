@@ -38,7 +38,7 @@ public class Parser {
         for (int i = 0; i < ((listOfFirstDocsHeaders.size() > 10) ? 10 : listOfFirstDocsHeaders.size()); i++) {
             Element header = listOfFirstDocsHeaders.get(i);
             String url = processHeaders(header);
-            mCore.itemPipeline.addUrl(url);
+            mCore.scheduler.addUrl(Core.getAbsoluteUrl(url));
         }
     }
 
@@ -63,12 +63,12 @@ public class Parser {
         return headerLink.attr("href");
     }
 
-    public void parseCiteRefResponse(HttpResponse httpResponse) {
+    public void parseCiteRefResponse(String url, HttpResponse httpResponse, boolean isRefrence/**or citation!**/) {
         try {
             String response = buildResponseFromEntity(httpResponse.getEntity());
             ArrayList<String[]> citations = parseCitationsJson(response);
             for (String[] citation : citations) {
-                mCore.itemPipeline.addUrl(citation[1]);
+                mCore.itemPipeline.addUrl(url, citation[1], isRefrence);
             }
         } catch (IOException e) {
             e.printStackTrace();
