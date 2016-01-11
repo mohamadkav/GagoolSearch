@@ -49,6 +49,7 @@ public class Downloader {
         Document doc;
         url = mCore.scheduler.getNextUrl();
         while (url != null && !mCore.isDone()) {
+            System.out.println("==>" + mCore.articlesJsonArray.toString());
             System.out.println("downloading article: " + url);
             pubId = getPublicationId(url);
             doc = getArticlePage(url);
@@ -81,11 +82,11 @@ public class Downloader {
     }
 
     private void getReferences(String ref, String pubId) throws IOException {
-        getCitesRefs(getRefUrl(pubId), ref);
+        getCitesRefs(getRefUrl(pubId), ref, true);
     }
 
     private void getCitations(String ref, String pubId) throws IOException {
-        getCitesRefs(getCitationUrl(pubId), ref);
+        getCitesRefs(getCitationUrl(pubId), ref, false);
     }
 
 
@@ -98,9 +99,9 @@ public class Downloader {
         return publicationIdMatcher.group(1);
     }
 
-    private void getCitesRefs(String url, String ref) throws IOException {
+    private void getCitesRefs(String url, String ref, boolean isRefrence) throws IOException {
         HttpResponse response = getAjaxResult(ref, url);
-        mCore.parser.parseCiteRefResponse(response);
+        mCore.parser.parseCiteRefResponse(url, response, isRefrence);
     }
 
 
