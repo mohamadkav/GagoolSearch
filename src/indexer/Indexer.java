@@ -7,6 +7,7 @@ import models.Article;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
@@ -34,6 +35,7 @@ public class Indexer {
 		sampleArticle.addProperty(Article.URL_KEY, "article.url");
 		sampleArticle.addProperty(Article.ABSTRACTION_KEY, "abstract, not abstraction!");
 //		indexer.addArticle(sampleArticle);
+		indexer.updateArticlePageRank(3, 0.6);
 		String result = indexer.basicSearch("*");
 		System.out.println(result);
 	}
@@ -68,7 +70,17 @@ public class Indexer {
 		StringEntity body = new StringEntity(articleString);
 		httpput.setEntity(body);
 		CloseableHttpClient httpclient = HttpClients.createDefault();
-//        CloseableHttpResponse response = httpclient.execute(httpput);
+        httpclient.execute(httpput);
+        httpclient.close();
+	}
+	
+	public void updateArticlePageRank(int articleId, double pageRank) throws IOException {
+        HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId + "/_update");
+        String s = "{\"doc\" : {\"page_rank\" : " + pageRank + "}}";
+		StringEntity body = new StringEntity(s);
+		httppost.setEntity(body);
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+		httpclient.execute(httppost);
         httpclient.close();
 	}
 	
