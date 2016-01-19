@@ -83,13 +83,17 @@ public class PageRank {
 		System.out.println("-----");
 	}
 	
+	/**
+	 * normalize the vector such that its components sum to 1 
+	 */
 	private RealVector normalizeEigenvector(RealVector v) throws Exception {
-		RealVector nv = v.mapDivideToSelf(v.getNorm());
-		for(int i=0; i<nv.getDimension()-1; i++)
-			if(nv.getEntry(i) * nv.getEntry(i+1) < 0)
+		double s = v.getEntry(0);
+		for(int i=1; i<v.getDimension(); i++) {
+			if(v.getEntry(i) * v.getEntry(i-1) < 0)
 				throw new Exception("All elements of the eigenvector don't have the same sign");
-		if(nv.getEntry(0) < 0)
-			nv = nv.mapMultiply(-1);
+			s += v.getEntry(i);
+		}
+		RealVector nv = v.mapDivideToSelf(s);
 		return nv;
 	}
 	
