@@ -84,7 +84,7 @@ public class PageRank {
 	}
 	
 	/**
-	 * normalize the vector such that its components sum to 1 
+	 * normalize the vector such that its components add to 1 
 	 */
 	private RealVector normalizeEigenvector(RealVector v) throws Exception {
 		double s = v.getEntry(0);
