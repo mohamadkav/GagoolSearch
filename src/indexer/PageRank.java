@@ -65,9 +65,9 @@ public class PageRank {
 //		EigenDecomposition ed = new EigenDecomposition(m);
 		double[] eVals = ed.getRealEigenvalues();
 		
-		for(int i=0; i<eVals.length; i++)
-			System.out.println(eVals[i]);
-		System.out.println("-----");
+//		for(int i=0; i<eVals.length; i++)
+//			System.out.println(eVals[i]);
+//		System.out.println("-----");
 		
 		int ind = getEValIndex(eVals, 1);
 		if(ind == -1)
