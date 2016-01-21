@@ -42,12 +42,25 @@ public class Parser {
         }
     }
 
-    public void parseDoc(String url, Document doc) {
-        Element element = doc.select(".pub-abstract div div").first();
+    public void parseDoc(String url, Document doc, ArrayList<String> references, ArrayList<String> citations) {
+//        if (url.contains("273488773"))
+//            System.out.println(doc);
+        Elements elements = doc.select(".pub-abstract div div");
+        Element element;
+        if (elements == null || elements.html().equals("")) {
+            elements = doc.select(".publication-abstract-text span");
+        }
+        if (elements == null || elements.html().equals("")) {
+            elements = doc.select(".pub-abstract div");
+        }
+        element = elements.first();
         String docPreString = element.html();
         String abstraction = docPreString.replace("\n<br>", "");
-        element = doc.select(".pub-title").first();
-        mCore.addArticle(url, element.html(), abstraction);
+        elements = doc.select(".pub-title");
+        if (elements == null || elements.html().equals(""))
+            elements = doc.select(".publication-title");
+        element = elements.first();
+        mCore.addArticle(url, element.html(), abstraction, references, citations);
 //        System.out.println(docString);
     }
 
@@ -63,16 +76,19 @@ public class Parser {
         return headerLink.attr("href");
     }
 
-    public void parseCiteRefResponse(String url, HttpResponse httpResponse, boolean isRefrence/**or citation!**/) {
+    public ArrayList<String> parseCiteRefResponse(String preArticleUrl, String url, HttpResponse httpResponse, boolean isReference/**or citation!**/) {
+        ArrayList<String> citationsUrl = new ArrayList<>();
         try {
             String response = buildResponseFromEntity(httpResponse.getEntity());
             ArrayList<String[]> citations = parseCitationsJson(response);
             for (String[] citation : citations) {
-                mCore.itemPipeline.addUrl(url, citation[1], isRefrence);
+                mCore.itemPipeline.addUrl(preArticleUrl, url, citation[1], isReference);
+                citationsUrl.add(Core.getAbsoluteUrl(citation[1]));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return citationsUrl;
     }
 
 
@@ -97,10 +113,26 @@ public class Parser {
                 .getAsJsonObject("data")
                 .getAsJsonArray("citationItems");
         ArrayList<String[]> citations = new ArrayList<>();
-        for (int i = 0; i < ((citationArray.size() >= 10) ? 10 : citationArray.size()); i++) {
+        int dismiss = 0;
+        int i = 0;
+        for (i = 0; i < ((citationArray.size() >= 10) ? 10 : citationArray.size()); i++) {
             JsonObject citation = citationArray.get(i).getAsJsonObject().getAsJsonObject("data");
-            citations.add(new String[]{citation.get("title").getAsString()
-                    , citation.get("url").getAsString()});
+            try {
+                citations.add(new String[]{citation.get("title").getAsString()
+                        , citation.get("url").getAsString()});
+            } catch (NullPointerException e) {
+                dismiss++;
+            }
+        }
+        while (dismiss > 0 && citationArray.size() < i) {
+            JsonObject citation = citationArray.get(i++).getAsJsonObject().getAsJsonObject("data");
+            try {
+                citations.add(new String[]{citation.get("title").getAsString()
+                        , citation.get("url").getAsString()});
+                dismiss--;
+            } catch (NullPointerException e) {
+                dismiss++;
+            }
         }
         return citations;
     }

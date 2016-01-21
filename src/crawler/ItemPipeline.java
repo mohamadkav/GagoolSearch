@@ -10,8 +10,8 @@ public class ItemPipeline {
     private static ItemPipeline mInstance;
     private Core mCore;
     HashMap<String, Boolean> seenUrls;
-    HashMap<String, HashSet<String>> referenced;
-    HashMap<String, HashSet<String>> citedIn;
+    HashMap<String, HashSet<String>> referenced = new HashMap<>();
+    HashMap<String, HashSet<String>> citedIn = new HashMap<>();
 
     private ItemPipeline(Core core) {
         mCore = core;
@@ -25,9 +25,11 @@ public class ItemPipeline {
         return mInstance;
     }
 
-    public void addUrl(String baseUrl, String url, boolean isReference) {
+    public void addUrl(String preArticleUrl, String baseUrl, String url, boolean isReference) {
         Boolean seen = seenUrls.get(Core.getAbsoluteUrl(url));
         if (seen != null) {
+            //TODO: add to references?!
+            mCore.setReferencesAndCitations(preArticleUrl, Core.getAbsoluteUrl(url));
             System.out.println("TEKRARI>>>>> " + Core.getAbsoluteUrl(url));
         } else {
             mCore.scheduler.addUrl(Core.getAbsoluteUrl(url));

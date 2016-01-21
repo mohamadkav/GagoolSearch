@@ -10,6 +10,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,7 +43,7 @@ public class Downloader {
         return mInstance;
     }
 
-    void run() throws InterruptedException, IOException {
+    void run() {
         String url;
         String articleUrl;
         String pubId;
@@ -53,11 +54,19 @@ public class Downloader {
             System.out.println("downloading article: " + url);
             pubId = getPublicationId(url);
             doc = getArticlePage(url);
-            System.out.println(doc);
-            mCore.parser.parseDoc(url, doc);
-            getReferences(url, pubId);
-            getCitations(url, pubId);
-            url = mCore.scheduler.getNextUrl();
+//            System.out.println(doc);
+            if (doc != null) {
+                ArrayList<String> references, citations;
+                try {
+                    references = getReferences(url, pubId);
+                    citations = getCitations(url, pubId);
+                    mCore.parser.parseDoc(url, doc, references, citations);
+                    url = mCore.scheduler.getNextUrl();
+                } catch (IOException e) {
+                    System.out.println("internet exception :| added the link to the scheduler!");
+                    mCore.scheduler.addUrl(url);
+                }
+            }
         }
     }
 
@@ -81,12 +90,12 @@ public class Downloader {
         }
     }
 
-    private void getReferences(String ref, String pubId) throws IOException {
-        getCitesRefs(getRefUrl(pubId), ref, true);
+    private ArrayList<String> getReferences(String ref, String pubId) throws IOException {
+        return getCitesRefs(getRefUrl(pubId), ref, true);
     }
 
-    private void getCitations(String ref, String pubId) throws IOException {
-        getCitesRefs(getCitationUrl(pubId), ref, false);
+    private ArrayList<String> getCitations(String ref, String pubId) throws IOException {
+        return getCitesRefs(getCitationUrl(pubId), ref, false);
     }
 
 
@@ -99,9 +108,9 @@ public class Downloader {
         return publicationIdMatcher.group(1);
     }
 
-    private void getCitesRefs(String url, String ref, boolean isRefrence) throws IOException {
+    private ArrayList<String> getCitesRefs(String url, String ref, boolean isReference) throws IOException {
         HttpResponse response = getAjaxResult(ref, url);
-        mCore.parser.parseCiteRefResponse(url, response, isRefrence);
+        return mCore.parser.parseCiteRefResponse(ref, url, response, isReference);
     }
 
 
