@@ -1,9 +1,9 @@
 package crawler;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import models.Article;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -12,13 +12,15 @@ import java.util.HashMap;
  */
 public class Core {
     public static final int REQUIRED_DOC_COUNT = 1;
+    public static final String DOCS_JSON_DIR = "docs";
+    public static final String JSON_FORMAT = ".json";
     public static String BASE_URL = "https://www.researchgate.net/";
     int nextDocId = 1;
     Downloader downloader;
     ItemPipeline itemPipeline;
     Parser parser;
     Scheduler scheduler;
-    JsonArray articlesJsonArray;
+    //    JsonArray articlesJsonArray;
     public static final String FIRST_LINK = "https://www.researchgate.net/researcher/8159937_Zoubin_Ghahramani";
 
     private HashMap<String, Article> referencesTemp = new HashMap<>();
@@ -39,7 +41,17 @@ public class Core {
     }
 
     private void initializeJson() {
-        articlesJsonArray = new JsonArray();
+//        articlesJsonArray = new JsonArray();
+        File dir = new File(DOCS_JSON_DIR);
+        if (!dir.exists()) {
+            boolean successful = dir.mkdir();
+            if (successful) {
+                System.out.println("docs directory was created successfully");
+            } else {
+                System.out.println("failed trying to create docs directory... retrying...");
+                initializeJson();
+            }
+        }
     }
 
     public boolean isDone() {
@@ -54,13 +66,23 @@ public class Core {
         url = url.split("\\?")[0];
         Article article = new Article(title, url, nextDocId, abstraction);
         nextDocId++;
-        addToJson(article);
+        makeJson(article);
+//        addToJson(article);
         addCitationsAndReferencesToTemp(article, references, citations);
         setReferencesAndCitations(article, url);
         articles.put(url, article);
 //        System.out.println("---->" + url);
         System.out.println(article);
 //        addArticleToGraph(article);
+    }
+
+    private void makeJson(Article article) {
+
+        try (FileWriter file = new FileWriter(DOCS_JSON_DIR + "/" + article.getId() + JSON_FORMAT)) {
+            file.write(article.getJsonObject().toString());
+        } catch (Exception e) {
+            makeJson(article);
+        }
     }
 
     public void setReferencesAndCitations(String baseUrl, String url) {
@@ -99,15 +121,15 @@ public class Core {
         }
     }
 
-    private void addToJson(Article article) {
-        articlesJsonArray.add(article.getJsonObject());
-    }
-
-    public JsonObject getArticleJsons() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.add("articles", articlesJsonArray);
-        return jsonObject;
-    }
+//    private void addToJson(Article article) {
+//        articlesJsonArray.add(article.getJsonObject());
+//    }
+//
+//    public JsonObject getArticleJsons() {
+//        JsonObject jsonObject = new JsonObject();
+//        jsonObject.add("articles", articlesJsonArray);
+//        return jsonObject;
+//    }
 
 
 }

@@ -58,12 +58,12 @@ public class Indexer {
         }	
     }
 	
-	public void addAllArticles() throws ClientProtocolException, IOException {
-		JsonArray articles = core.getArticleJsons().get("articles").getAsJsonArray();
-		for(int i=0; i<articles.size(); i++) {
-			addArticle(articles.get(i).getAsJsonObject());
-		}
-	}
+//	public void addAllArticles() throws ClientProtocolException, IOException {
+//		JsonArray articles = core.getArticleJsons().get("articles").getAsJsonArray();
+//		for(int i=0; i<articles.size(); i++) {
+//			addArticle(articles.get(i).getAsJsonObject());
+//		}
+//	}
 	
 	public String addArticle(JsonObject articleJson) throws ClientProtocolException, IOException {
 		int articleId = articleJson.get(Article.ID_KEY).getAsInt();

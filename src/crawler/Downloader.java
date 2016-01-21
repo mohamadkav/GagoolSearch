@@ -50,7 +50,7 @@ public class Downloader {
         Document doc;
         url = mCore.scheduler.getNextUrl();
         while (url != null && !mCore.isDone()) {
-            System.out.println("==>" + mCore.articlesJsonArray.toString());
+//            System.out.println("==>" + mCore.articlesJsonArray.toString());
             System.out.println("downloading article: " + url);
             pubId = getPublicationId(url);
             doc = getArticlePage(url);
@@ -62,7 +62,7 @@ public class Downloader {
                     citations = getCitations(url, pubId);
                     mCore.parser.parseDoc(url, doc, references, citations);
                     url = mCore.scheduler.getNextUrl();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     System.out.println("internet exception :| added the link to the scheduler!");
                     mCore.scheduler.addUrl(url);
                 }
@@ -74,7 +74,7 @@ public class Downloader {
     public Document getArticlePage(String url) {
         try {
             return Jsoup.connect(url).get();
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("time_out_in: link. the article had been added to the list again!");
             mCore.scheduler.addUrl(url);
             return null;

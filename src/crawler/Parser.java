@@ -42,17 +42,18 @@ public class Parser {
         }
     }
 
-    public void parseDoc(String url, Document doc, ArrayList<String> references, ArrayList<String> citations) {
+    public void parseDoc(String url, Document doc, ArrayList<String> references, ArrayList<String> citations)
+        throws Exception{
 //        if (url.contains("273488773"))
 //            System.out.println(doc);
         Elements elements = doc.select(".pub-abstract div div");
         Element element;
-        if (elements == null || elements.html().equals("")) {
-            elements = doc.select(".publication-abstract-text span");
-        }
-        if (elements == null || elements.html().equals("")) {
-            elements = doc.select(".pub-abstract div");
-        }
+//        if (elements == null || elements.html().equals("")) {
+//            elements = doc.select(".publication-abstract-text span");
+//        }
+//        if (elements == null || elements.html().equals("")) {
+//            elements = doc.select(".pub-abstract div");
+//        }
         element = elements.first();
         String docPreString = element.html();
         String abstraction = docPreString.replace("\n<br>", "");
