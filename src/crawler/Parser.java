@@ -33,7 +33,7 @@ public class Parser {
         return mInstance;
     }
 
-    public void parseFirstPage(Document doc) throws IOException {
+    public void parseFirstPage(Document doc) {
         Elements listOfFirstDocsHeaders = getListOfFirstDocsHeaders(doc);
         for (int i = 0; i < ((listOfFirstDocsHeaders.size() > 10) ? 10 : listOfFirstDocsHeaders.size()); i++) {
             Element header = listOfFirstDocsHeaders.get(i);
@@ -51,9 +51,9 @@ public class Parser {
 //        if (elements == null || elements.html().equals("")) {
 //            elements = doc.select(".publication-abstract-text span");
 //        }
-//        if (elements == null || elements.html().equals("")) {
-//            elements = doc.select(".pub-abstract div");
-//        }
+        if (elements == null || elements.html().equals("")) {
+            elements = doc.select(".pub-abstract div");
+        }
         element = elements.first();
         String docPreString = element.html();
         String abstraction = docPreString.replace("\n<br>", "");

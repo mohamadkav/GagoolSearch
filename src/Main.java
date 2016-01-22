@@ -1,10 +1,12 @@
 import crawler.Core;
 
+import java.io.FileNotFoundException;
+
 /**
  * Created by saeed on 12/29/2015.
  */
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
         new Core();
     }
 }

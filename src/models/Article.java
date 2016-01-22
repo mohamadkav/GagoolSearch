@@ -1,5 +1,6 @@
 package models;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public class Article {
     public static String URL_KEY = "url";
     public static String ABSTRACTION_KEY = "abstraction";
 
-    long id;
+    int id;
     String title;
     String url;
     String abstraction;
@@ -21,7 +22,7 @@ public class Article {
     ArrayList<Article> references = new ArrayList<>();
     ArrayList<Article> citations = new ArrayList<>();
 
-    public Article(String title, String url, long id, String abstraction) {
+    public Article(String title, String url, int id, String abstraction) {
         this.title = title;
         this.url = url;
         this.id = id;
@@ -50,7 +51,7 @@ public class Article {
         return title;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
@@ -68,6 +69,9 @@ public class Article {
         jsonObject.addProperty(Article.TITLE_KEY, title);
         jsonObject.addProperty(Article.URL_KEY, url);
         jsonObject.addProperty(Article.ABSTRACTION_KEY, abstraction);
+//        Gson gson = new Gson();
+//        jsonObject.addProperty("references", gson.toJson(references));
+//        jsonObject.addProperty("citations", gson.toJson(citations));
         return jsonObject;
     }
 
