@@ -62,11 +62,11 @@ public class Core {
         }
     }
 
-    public void log(String msg) {
-        long timeStamp = System.currentTimeMillis();
-        log.format(timeStamp + ":" + msg + "\n");
-        log.flush();
-    }
+//    public void log(String msg) {
+//        long timeStamp = System.currentTimeMillis();
+//        log.format(timeStamp + ":" + msg + "\n");
+//        log.flush();
+//    }
 
     private void initializeLogging() throws FileNotFoundException {
         log = new Formatter("docs.log");

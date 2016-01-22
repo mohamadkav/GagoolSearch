@@ -66,7 +66,7 @@ public class Downloader {
                     System.out.println("internet exception :| added the link to the scheduler!");
 //                    mCore.scheduler.addUrl(url);
                 } catch (Exception e) {
-                    mCore.log("Ignored " + url);
+//                    mCore.log("Ignored " + url);
                     System.out.println("Ignored " + url);
                     url = mCore.scheduler.getNextUrl();
                 }
