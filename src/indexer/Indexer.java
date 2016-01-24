@@ -1,6 +1,9 @@
 package indexer;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Map;
+import java.util.Scanner;
 
 import models.Article;
 
@@ -15,18 +18,22 @@ import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import clusterer.TermVector;
 
-import crawler.Core;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 public class Indexer {
 
 	private static final String INDEX_URL = "http://localhost:9200";
+	private static final String FIlES_PATH = System.getProperty("user.dir");
 
 	private String indexName;
 	
-	private Core core;
+//	private Core core;
 	
 	public static void main(String[] args) throws ClientProtocolException, IOException {
 		Indexer indexer = new Indexer("gagool");
@@ -40,13 +47,15 @@ public class Indexer {
 //		indexer.updateArticlePageRank(7, 0.2);
 //		String result = indexer.basicSearch("*");
 //		System.out.println(result);
-		System.out.println(indexer.pageRankedSearch("abstraction"));
+//		System.out.println(indexer.pageRankedSearch("abstraction"));
+//		indexer.addAllArticles();
+		indexer.getTermVector(27);
 	}
 	
 	public Indexer(String name) {
 		this.indexName = name;
 	}
-
+	
 	public void createIndex() throws ClientProtocolException, IOException {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
@@ -58,12 +67,45 @@ public class Indexer {
         }	
     }
 	
-//	public void addAllArticles() throws ClientProtocolException, IOException {
+	public void removeIndex() {
+		
+	}
+	
+	public void addAllArticles() throws ClientProtocolException, IOException {
 //		JsonArray articles = core.getArticleJsons().get("articles").getAsJsonArray();
+//		FileReader file = new FileReader("articles" + Core.JSON_FORMAT);
+//		String s = "";
+//		Scanner scanner = new Scanner(FIlES_PATH + "/articles." + Core.JSON_FORMAT);
+//		while(scanner.hasNextLine()) {
+//			s += scanner.nextLine();
+//		}
+//		scanner.close();
+		for(int i=1; i<=1000; i++) {
+			String s = "";
+			Scanner scanner = new Scanner(new File(FIlES_PATH + "\\docs\\" + i + ".json"));
+			while(scanner.hasNextLine()) {
+				s += scanner.nextLine();
+			}
+			scanner.close();			
+			JsonParser parser = new JsonParser();
+			JsonObject article = parser.parse(s).getAsJsonObject();
+			try{
+				addArticle(article);
+			} catch (Exception e) {
+				System.err.println(s);
+				System.err.println(i);				
+			}
+		}
+//		JsonParser parser = new JsonParser();
+//		JsonReader reader = new JsonReader(new FileReader("articles." + Core.JSON_FORMAT));
+		
+//		JsonArray articles = parser.parse(s).getAsJsonObject().get("articles").getAsJsonArray();
+//		System.err.println("articles size: " + articles.size());
 //		for(int i=0; i<articles.size(); i++) {
 //			addArticle(articles.get(i).getAsJsonObject());
+//			System.err.println(i);
 //		}
-//	}
+	}
 	
 	public String addArticle(JsonObject articleJson) throws ClientProtocolException, IOException {
 		int articleId = articleJson.get(Article.ID_KEY).getAsInt();
@@ -140,5 +182,34 @@ public class Indexer {
         String responseString = new BasicResponseHandler().handleResponse(response);
         httpclient.close();
         return responseString;
+	}
+	
+	public TermVector getTermVector(int id) throws ClientProtocolException, IOException {
+        HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article/" + id + "/_termvectors");	
+        JsonArray fields = new JsonArray();
+        fields.add(new JsonPrimitive("abstraction"));
+        fields.add(new JsonPrimitive("title"));
+        JsonObject body = new JsonObject();
+        body.add("fields", fields);
+        body.addProperty("term_statistics", true);
+        String res = requestWithEntity(httppost, body.toString());
+        System.out.println(res);
+        
+        TermVector v = new TermVector();
+        JsonObject json = new JsonParser().parse(res).getAsJsonObject();
+        JsonObject terms = 
+        		json.get("term_vectors").getAsJsonObject().get("abstraction").getAsJsonObject().get("terms").getAsJsonObject();
+        for(Map.Entry<String, JsonElement> entry : terms.entrySet()) {
+        	int tf = entry.getValue().getAsJsonObject().get("term_freq").getAsInt();
+        	v.addTerm(entry.getKey(), tf);
+        	System.err.println(entry.getKey() + ": " + tf);
+        }
+        terms = json.get("term_vectors").getAsJsonObject().get("title").getAsJsonObject().get("terms").getAsJsonObject();
+        for(Map.Entry<String, JsonElement> entry : terms.entrySet()) {
+        	int tf = entry.getValue().getAsJsonObject().get("term_freq").getAsInt();
+        	v.addTerm(entry.getKey(), tf);
+        	System.err.println(entry.getKey() + ": " + tf);
+        }
+        return v;
 	}
 }
