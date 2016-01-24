@@ -1,4 +1,5 @@
 import crawler.Core;
+import ui.HomePageFrame;
 
 import java.io.FileNotFoundException;
 
@@ -7,6 +8,7 @@ import java.io.FileNotFoundException;
  */
 public class Main {
     public static void main(String[] args) throws FileNotFoundException {
-        new Core();
+        new HomePageFrame();
+//        new Core();
     }
 }
