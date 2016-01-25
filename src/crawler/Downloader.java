@@ -74,6 +74,39 @@ public class Downloader {
         }
     }
 
+    void getWriterDocs() {
+        String url;
+        String articleUrl;
+        String pubId;
+        Document doc;
+        url = mCore.scheduler.getNextUrl();
+        while (url != null && !mCore.isFriendDone()) {
+
+            System.out.println("==============================" + mCore.isFriendDone());
+//            System.out.println("==>" + mCore.articlesJsonArray.toString());
+            System.out.println("downloading article: " + url);
+            pubId = getPublicationId(url);
+            doc = getArticlePage(url);
+//            System.out.println(doc);
+            if (doc != null) {
+                ArrayList<String> references, citations;
+                try {
+                    references = getReferences(url, pubId);
+                    citations = getCitations(url, pubId);
+                    mCore.parser.parsFriendDoc(url, doc, references, citations);
+                    url = mCore.scheduler.getNextUrl();
+                } catch (IOException e) {
+                    System.out.println("internet exception :| added the link to the scheduler!");
+//                    mCore.scheduler.addUrl(url);
+                } catch (Exception e) {
+//                    mCore.log("Ignored " + url);
+                    System.out.println("Ignored " + url);
+                    url = mCore.scheduler.getNextUrl();
+                }
+            }
+        }
+    }
+
     @Nullable
     public Document getArticlePage(String url) {
         try {

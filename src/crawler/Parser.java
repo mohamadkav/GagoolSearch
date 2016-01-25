@@ -42,8 +42,27 @@ public class Parser {
         }
     }
 
+    public void parsFriendDoc(String url, Document doc, ArrayList<String> references, ArrayList<String> citations)
+            throws Exception {
+        Elements elements = doc.select(".pub-abstract div div");
+        Element element = elements.first();
+        String docPreString = element.html();
+        String abstraction = docPreString.replace("\n<br>", "");
+        elements = doc.select(".pub-title");
+        element = elements.first();
+        elements = doc.select("meta[name=citation_author]");
+        ArrayList<String> authors = new ArrayList<>();
+        System.out.println("authors:-> " + elements.size());
+        for (Element author : elements) {
+            System.out.println("--> " + author.attr("content"));
+            authors.add(author.attr("content"));
+        }
+        mCore.addArticle(url, element.html(), abstraction, references, citations, authors);
+//        System.out.println(docString);
+    }
+
     public void parseDoc(String url, Document doc, ArrayList<String> references, ArrayList<String> citations)
-        throws Exception{
+            throws Exception {
 //        if (url.contains("273488773"))
 //            System.out.println(doc);
         Elements elements = doc.select(".pub-abstract div div");
