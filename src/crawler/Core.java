@@ -22,7 +22,9 @@ public class Core {
     public static final String DOCS_JSON_DIR = "docs";
     public static final String JSON_FORMAT = ".json";
     public static final String LINKS_MATRIX_FILE = "links.matrix";
+    private static final int REQUIRED_FRIEND_COUNT = 100;
     public static String BASE_URL = "https://www.researchgate.net/";
+    public static final String FIRST_LINK = "https://www.researchgate.net/researcher/8159937_Zoubin_Ghahramani";
     public static Formatter log;
     private boolean[][] linkGraph;
     int nextDocId = 1;
@@ -31,8 +33,8 @@ public class Core {
     Parser parser;
     Scheduler scheduler;
     JsonArray articlesJsonArray;
-    public static final String FIRST_LINK = "https://www.researchgate.net/researcher/8159937_Zoubin_Ghahramani";
 
+    private HashMap<String, ArrayList<Integer>> authorsDocs = new HashMap<>();
     private HashMap<String, Article> referencesTemp = new HashMap<>();
     private HashMap<String, Article> citationsTemp = new HashMap<>();
     private HashMap<String, Article> articles = new HashMap<>();
@@ -47,11 +49,37 @@ public class Core {
         Document doc = downloader.getPage(FIRST_LINK);
         parser.parseFirstPage(doc);
 //        scheduler.addUrl("https://www.researchgate.net/publication/285458515_A_General_Framework_for_Constrained_Bayesian_Optimization_using_Information-based_Search");
-        while (!isDone())
-            downloader.run();
-        cleanUpLogging();
+//        while (!isDone())
+//            downloader.run();
+//        cleanUpLogging();
+//        makeGraphFile();
+//        makeJson(getArticleJsons());
+
+        while (!isFriendDone()) {
+            System.out.println("==============================" + isFriendDone());
+            downloader.getWriterDocs();
+        }
         makeGraphFile();
         makeJson(getArticleJsons());
+        makeAuthorsFile();
+    }
+
+    private void makeAuthorsFile() {
+        try (FileWriter file = new FileWriter("authors" + JSON_FORMAT)) {
+            for (String key : authorsDocs.keySet()) {
+                String str = key;
+                for (int doc : authorsDocs.get(key)) {
+                    str += ":" + doc;
+                }
+                file.write(str + "\n");
+                file.flush();
+            }
+            file.write("\n\r");
+            file.flush();
+            file.close();
+        } catch (Exception e) {
+            makeAuthorsFile();
+        }
     }
 
     private void makeGraphFile() {
@@ -98,8 +126,38 @@ public class Core {
         return nextDocId > REQUIRED_DOC_COUNT;
     }
 
+    public boolean isFriendDone() {
+        return authorsDocs.size() > REQUIRED_FRIEND_COUNT;
+    }
+
     public static String getAbsoluteUrl(String url) {
         return BASE_URL + url;
+    }
+
+    public void addArticle(String url, String title, String abstraction, ArrayList<String> references, ArrayList<String> citations, ArrayList<String> authors) {
+        url = url.split("\\?")[0];
+        Article article = new Article(title, url, nextDocId, abstraction);
+        addAuthors(authors, article);
+        nextDocId++;
+        makeJson(article);
+        addToJson(article);
+        addCitationsAndReferencesToTemp(article, references, citations);
+        setReferencesAndCitations(article, url);
+        articles.put(url, article);
+//        System.out.println("---->" + url);
+        System.out.println(article);
+//        addArticleToGraph(article);
+    }
+
+    private void addAuthors(ArrayList<String> authors, Article article) {
+        for (String author : authors) {
+            ArrayList<Integer> docIds = authorsDocs.get(author);
+            if (docIds == null) {
+                docIds = new ArrayList<>();
+            }
+            docIds.add(article.getId());
+            authorsDocs.put(author, docIds);
+        }
     }
 
     public void addArticle(String url, String title, String abstraction, ArrayList<String> references, ArrayList<String> citations) {
@@ -172,7 +230,7 @@ public class Core {
             System.out.println("REFERENCE: " + url);
         }
         for (String url : citations) {
-            referencesTemp.put(url, article);
+            citationsTemp.put(url, article);
             System.out.println("CITATION: " + url);
         }
     }
