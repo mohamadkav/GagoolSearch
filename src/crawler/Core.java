@@ -48,7 +48,6 @@ public class Core {
         scheduler = Scheduler.getInstance();
         Document doc = downloader.getPage(FIRST_LINK);
         parser.parseFirstPage(doc);
-//        scheduler.addUrl("https://www.researchgate.net/publication/285458515_A_General_Framework_for_Constrained_Bayesian_Optimization_using_Information-based_Search");
 //        while (!isDone())
 //            downloader.run();
 //        cleanUpLogging();
