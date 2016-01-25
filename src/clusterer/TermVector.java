@@ -9,9 +9,16 @@ public class TermVector {
 	private Map<String, Integer> terms = new HashMap<String, Integer>(); // number of occurrences of each term
 	private Map<String, Double> normalizedVector;
 	private double length;
+	private int id;
 	
-	public TermVector() {
-		
+	public TermVector() {}
+	
+	public TermVector(int id) {
+		this.id = id;
+	}
+	
+	public int getId() {
+		return this.id;
 	}
 	
 	public static TermVector centroid(Set<TermVector> vectors) {

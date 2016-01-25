@@ -1,6 +1,7 @@
 package indexer;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Scanner;
@@ -29,31 +30,35 @@ import com.google.gson.JsonPrimitive;
 public class Indexer {
 
 	private static final String INDEX_URL = "http://localhost:9200";
-	private static final String FIlES_PATH = System.getProperty("user.dir");
+	private static final String FILES_PATH = System.getProperty("user.dir");
+	private static final int N = 1000;
 
 	private String indexName;
+	private PageRank pageRank;
 	
 //	private Core core;
 	
 	public static void main(String[] args) throws ClientProtocolException, IOException {
 		Indexer indexer = new Indexer("gagool");
 //		indexer.createIndex();
-		JsonObject sampleArticle = new JsonObject();
-		sampleArticle.addProperty(Article.ID_KEY, "7");
-		sampleArticle.addProperty(Article.TITLE_KEY, "seventh article");
-		sampleArticle.addProperty(Article.URL_KEY, "seventh.url");
-		sampleArticle.addProperty(Article.ABSTRACTION_KEY, "TV sucks, thank to the internte!");
+//		JsonObject sampleArticle = new JsonObject();
+//		sampleArticle.addProperty(Article.ID_KEY, "7");
+//		sampleArticle.addProperty(Article.TITLE_KEY, "seventh article");
+//		sampleArticle.addProperty(Article.URL_KEY, "seventh.url");
+//		sampleArticle.addProperty(Article.ABSTRACTION_KEY, "TV sucks, thank to the internte!");
 //		System.out.println(indexer.addArticle(sampleArticle));
 //		indexer.updateArticlePageRank(7, 0.2);
 //		String result = indexer.basicSearch("*");
 //		System.out.println(result);
-//		System.out.println(indexer.pageRankedSearch("abstraction"));
+		System.out.println(indexer.pageRankedSearch("algorithm bayesian").toString());
 //		indexer.addAllArticles();
-		indexer.getTermVector(27);
+//		indexer.getTermVector(27);
+//		indexer.assignPageRanks();
 	}
 	
 	public Indexer(String name) {
-		this.indexName = name;
+		this.indexName = name;	
+		pageRank = new PageRank();
 	}
 	
 	public void createIndex() throws ClientProtocolException, IOException {
@@ -70,7 +75,7 @@ public class Indexer {
 	public void removeIndex() {
 		
 	}
-	
+		
 	public void addAllArticles() throws ClientProtocolException, IOException {
 //		JsonArray articles = core.getArticleJsons().get("articles").getAsJsonArray();
 //		FileReader file = new FileReader("articles" + Core.JSON_FORMAT);
@@ -82,7 +87,7 @@ public class Indexer {
 //		scanner.close();
 		for(int i=1; i<=1000; i++) {
 			String s = "";
-			Scanner scanner = new Scanner(new File(FIlES_PATH + "\\docs\\" + i + ".json"));
+			Scanner scanner = new Scanner(new File(FILES_PATH + "\\docs\\" + i + ".json"));
 			while(scanner.hasNextLine()) {
 				s += scanner.nextLine();
 			}
@@ -114,6 +119,18 @@ public class Indexer {
         return this.requestWithEntity(httpput, articleString);
 	}
 	
+	public void assignPageRanks() throws FileNotFoundException {
+//		pageRank.consAdjMatFromFile();
+		pageRank.setImaginaryPageRanks();
+		for(int i=0; i<N; i++) {
+			try {
+				updateArticlePageRank(i, pageRank.getPageRank(i));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public void updateArticlePageRank(int articleId, double pageRank) throws IOException {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId + "/_update");
         String s = "{\"doc\" : {\"page_rank\" : " + pageRank + "}}";
@@ -129,7 +146,7 @@ public class Indexer {
         return responseString;
 	}
 	
-	public String pageRankedSearch(String query) throws ClientProtocolException, IOException {
+	public JsonObject pageRankedSearch(String query) throws ClientProtocolException, IOException {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "_search");
 
         /**
@@ -163,8 +180,12 @@ public class Indexer {
 		JsonObject wholeQuery = new JsonObject();
 		wholeQuery.add("query", functionScore);
         
-		System.err.println(wholeQuery.toString());
-        return this.requestWithEntity(httppost, wholeQuery.toString());		
+//		System.err.println(wholeQuery.toString());
+        String res = this.requestWithEntity(httppost, wholeQuery.toString());
+//        System.err.println(res);
+        JsonObject json = new JsonParser().parse(res).getAsJsonObject();
+//        System.err.println(json.get("hits").getAsJsonObject().get("hits").getAsJsonArray().get(0).toString());
+        return json.get("hits").getAsJsonObject();
 	}
 	
 	public String indexSearchScript() throws ClientProtocolException, IOException {
@@ -195,7 +216,7 @@ public class Indexer {
         String res = requestWithEntity(httppost, body.toString());
         System.out.println(res);
         
-        TermVector v = new TermVector();
+        TermVector v = new TermVector(id);
         JsonObject json = new JsonParser().parse(res).getAsJsonObject();
         JsonObject terms = 
         		json.get("term_vectors").getAsJsonObject().get("abstraction").getAsJsonObject().get("terms").getAsJsonObject();

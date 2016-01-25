@@ -1,10 +1,8 @@
 package clusterer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -26,42 +24,37 @@ public class Clusterer {
 	 * 
 	 * @param k: indicates number of clusters
 	 */
-	public Map<Integer, Set<TermVector>> KMeans(int k) {
-		Map<Integer, Set<TermVector>> clustering = new HashMap<Integer, Set<TermVector>>();
+	public Set<Cluster> KMeans(int k) {
+		Set<Cluster> clusters = new HashSet<Cluster>();
 		// choose k random centroids
-		Map<Integer, TermVector> centroids = initialCentroids(k);
+		initializeClusters(clusters, k);
 		double prevRSS = 2*INF, currRSS = INF;	/** RSS abbreviates Residual Sum of Squares **/
 		int steps = 0;
 		while(clusteringContinues(prevRSS, currRSS, steps++)) {
-			/** assigning to clusters */
-			Map<Integer, Set<TermVector>> temp = new HashMap<Integer, Set<TermVector>>();
+			for(Cluster c : clusters) {
+				c.renew();
+			}
 			for(int i=0; i<vectors.size(); i++) {
 				TermVector v = vectors.get(i);
-				int cluster = v.mostSimilar(centroids);
-				if(temp.containsKey(cluster))
-					temp.get(cluster).add(v);
-				else {
-					Set<TermVector> set = new HashSet<TermVector>();
-					set.add(v);
-					temp.put(cluster, set);
+				Cluster bestCluster = null;
+				for(Cluster c : clusters) {
+					double dist = v.distance(c.getCentroid());
+					if(bestCluster == null || dist < v.distance(bestCluster.getCentroid()))
+						bestCluster = c;
 				}
+				bestCluster.addArticle(v.getId(), v);
 			}
-			clustering = temp;
-			
-			/** compute centroids */
-			for(Map.Entry<Integer, Set<TermVector>> entry : clustering.entrySet()) {
-				TermVector v = TermVector.centroid(entry.getValue());
-				centroids.put(entry.getKey(), v);
-			}
+			for(Cluster c : clusters) {
+				c.computeCentroid();
+			}			
 			prevRSS = currRSS;
-			currRSS = computeRSS(clustering, centroids);
+			currRSS = computeRSS(clusters);
 		}
 		
-		return clustering;
+		return clusters;
 	}
 	
-	private Map<Integer, TermVector> initialCentroids(int k) {
-		Map<Integer, TermVector> centroids = new HashMap<Integer, TermVector>();
+	private void initializeClusters(Set<Cluster> clusters, int k) {
 		List<Integer> initCents = new ArrayList<Integer>();
 		Random rand = new Random();
 		for(int i=0; i<k; i++) {
@@ -72,9 +65,8 @@ public class Clusterer {
 			initCents.add(next);
 		}
 		for(int i=0; i<k; i++) {
-			centroids.put(i, vectors.get(initCents.get(i)));
+			clusters.add(new Cluster(vectors.get(initCents.get(i))));
 		}
-		return centroids;
 	}
 	
 	private boolean clusteringContinues(double prevRSS, double curRSS, int steps) {
@@ -83,7 +75,10 @@ public class Clusterer {
 		return false;
 	}
 	
-	private double computeRSS(Map<Integer, Set<TermVector>> clustering, Map<Integer, TermVector> centroids) {
-		return 0;
+	private double computeRSS(Set<Cluster> clusters) {
+		double rss = 0;
+		for(Cluster c : clusters)
+			rss += c.getRSS();
+		return rss;
 	}
 }

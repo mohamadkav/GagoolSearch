@@ -1,6 +1,9 @@
 package indexer;
 
-import java.lang.Math;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Random;
+import java.util.Scanner;
 
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -9,7 +12,8 @@ import org.apache.commons.math3.linear.RealVector;
 
 public class PageRank {
 
-	private static final int N = 3;
+	private static final String FILES_PATH = System.getProperty("user.dir");
+	private static final int N = 1000;
 	private static final double ALPHA = 0.5;
 	private static final double PRECISION = 0.01;
 	private int[][] adjMat;
@@ -18,27 +22,68 @@ public class PageRank {
 
 	public static void main(String[] args) throws Exception {
 		PageRank pr = new PageRank();
-		int[][] a = {{0, 1, 0}, {1, 0, 1}, {0, 1, 0}};
-		pr.setAdjacencyMatrix(a);
-		pr.computeProbabilityMatrix();
+		pr.consAdjMatFromFile();
+		String s = "";
+		int c = 0;
 		for(int i=0; i<N; i++) {
-			String s = "";
-			for(int j=0; j<N; j++)
-				s += pr.pMat[i][j] + " " ;
-			System.out.println(s);
+			for(int j=0; j<N; j++) {
+				if(pr.adjMat[i][j] == 1)
+					c++;
+			}
 		}
+		System.err.println("Count of 1 entries: " + c);
+		pr.computeProbabilityMatrix();
 		pr.computePageRanks();
+		for(int i=0; i<N; i++)
+			s += pr.pageRank[i] + " " ;
+		System.err.println(s);
+//		int[][] a = {{0, 1, 0}, {1, 0, 1}, {0, 1, 0}};
+//		pr.setAdjacencyMatrix(a);
+//		pr.computeProbabilityMatrix();
+//		for(int i=0; i<N; i++) {
+//			String s = "";
+//			for(int j=0; j<N; j++)
+//				s += pr.pMat[i][j] + " " ;
+//			System.out.println(s);
+//		}
+//		pr.computePageRanks();
 	}
 
 	public PageRank() {
+		adjMat = new int[N][N];
 		pMat = new double[N][N];
 		pageRank = new double[N];
 	}
 
+	public double getPageRank(int i) {
+		return pageRank[i];
+	}
+	
 	public void setAdjacencyMatrix(int[][] m) {
 		this.adjMat = m;
 	}
 
+	public void consAdjMatFromFile() throws FileNotFoundException {
+		String s = "";
+		Scanner scanner = new Scanner(new File(FILES_PATH + "\\links.matrix"));
+		while(scanner.hasNextLine()) {
+			s += scanner.nextLine();
+		}
+		scanner.close();			
+		s = s.replaceAll("\\[", "");
+		s = s.replaceAll("\\]", "");
+		String[] entries = s.split(",");
+		for(int i=0; i<N; i++) {
+			for(int j=0; j<N; j++) {
+				int ind = i*N + j;
+				if(entries[ind].equals("true"))
+					adjMat[i][j] = 1;
+				else
+					adjMat[i][j] = 0;
+			}
+		}
+	}
+	
 	public void computeProbabilityMatrix() {
 		for(int i=0; i<N; i++) {
 			int s = 0;
@@ -70,8 +115,11 @@ public class PageRank {
 //		System.out.println("-----");
 
 		int ind = getEValIndex(eVals, 1);
-		if(ind == -1)
+		if(ind == -1) {
+			for(int i=0; i<eVals.length; i++)
+				System.err.println(eVals[i]);
 			throw new Exception("What?! Eigenvalue 1 doesn't exist!");
+		}
 		RealVector ev = ed.getEigenvector(ind);
 
 		RealVector nev = normalizeEigenvector(ev);
@@ -83,6 +131,12 @@ public class PageRank {
 		System.out.println("-----");
 	}
 
+	public void setImaginaryPageRanks() {
+		Random rand = new Random();
+		for(int i=0; i<N; i++)
+			pageRank[i] = rand.nextDouble(); 
+	}
+	
 	/**
 	 * normalize the vector such that its components add to 1
 	 */
