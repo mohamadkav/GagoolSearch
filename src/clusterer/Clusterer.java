@@ -9,19 +9,19 @@ import java.util.Set;
 public class Clusterer {
 
 	private static double INF = 1000*1000*1000;
-	
+
 	private List<TermVector> vectors;
-	
+
 	public Clusterer(List<TermVector> vectors) {
 		this.vectors = vectors;
 	}
-	
+
 	public void cluster() {
-		
+
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param k: indicates number of clusters
 	 */
 	public Set<Cluster> KMeans(int k) {
@@ -46,14 +46,14 @@ public class Clusterer {
 			}
 			for(Cluster c : clusters) {
 				c.computeCentroid();
-			}			
+			}
 			prevRSS = currRSS;
 			currRSS = computeRSS(clusters);
 		}
-		
+
 		return clusters;
 	}
-	
+
 	private void initializeClusters(Set<Cluster> clusters, int k) {
 		List<Integer> initCents = new ArrayList<Integer>();
 		Random rand = new Random();
@@ -68,13 +68,13 @@ public class Clusterer {
 			clusters.add(new Cluster(vectors.get(initCents.get(i))));
 		}
 	}
-	
+
 	private boolean clusteringContinues(double prevRSS, double curRSS, int steps) {
 		if(steps < 10)
 			return true;
 		return false;
 	}
-	
+
 	private double computeRSS(Set<Cluster> clusters) {
 		double rss = 0;
 		for(Cluster c : clusters)

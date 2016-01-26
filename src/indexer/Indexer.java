@@ -35,9 +35,9 @@ public class Indexer {
 
 	private String indexName;
 	private PageRank pageRank;
-	
+
 //	private Core core;
-	
+
 	public static void main(String[] args) throws ClientProtocolException, IOException {
 		Indexer indexer = new Indexer("gagool");
 //		indexer.createIndex();
@@ -55,12 +55,12 @@ public class Indexer {
 //		indexer.getTermVector(27);
 //		indexer.assignPageRanks();
 	}
-	
+
 	public Indexer(String name) {
-		this.indexName = name;	
+		this.indexName = name;
 		pageRank = new PageRank();
 	}
-	
+
 	public void createIndex() throws ClientProtocolException, IOException {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
@@ -69,13 +69,13 @@ public class Indexer {
             System.out.println(response.getEntity());
         } finally {
             httpclient.close();
-        }	
+        }
     }
-	
+
 	public void removeIndex() {
-		
+
 	}
-		
+
 	public void addAllArticles() throws ClientProtocolException, IOException {
 //		JsonArray articles = core.getArticleJsons().get("articles").getAsJsonArray();
 //		FileReader file = new FileReader("articles" + Core.JSON_FORMAT);
@@ -91,19 +91,19 @@ public class Indexer {
 			while(scanner.hasNextLine()) {
 				s += scanner.nextLine();
 			}
-			scanner.close();			
+			scanner.close();
 			JsonParser parser = new JsonParser();
 			JsonObject article = parser.parse(s).getAsJsonObject();
 			try{
 				addArticle(article);
 			} catch (Exception e) {
 				System.err.println(s);
-				System.err.println(i);				
+				System.err.println(i);
 			}
 		}
 //		JsonParser parser = new JsonParser();
 //		JsonReader reader = new JsonReader(new FileReader("articles." + Core.JSON_FORMAT));
-		
+
 //		JsonArray articles = parser.parse(s).getAsJsonObject().get("articles").getAsJsonArray();
 //		System.err.println("articles size: " + articles.size());
 //		for(int i=0; i<articles.size(); i++) {
@@ -111,14 +111,14 @@ public class Indexer {
 //			System.err.println(i);
 //		}
 	}
-	
+
 	public String addArticle(JsonObject articleJson) throws ClientProtocolException, IOException {
 		int articleId = articleJson.get(Article.ID_KEY).getAsInt();
-		String articleString = articleJson.toString();		
+		String articleString = articleJson.toString();
         HttpPut httpput = new HttpPut(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId);
         return this.requestWithEntity(httpput, articleString);
 	}
-	
+
 	public void assignPageRanks() throws FileNotFoundException {
 //		pageRank.consAdjMatFromFile();
 		pageRank.setImaginaryPageRanks();
@@ -136,7 +136,7 @@ public class Indexer {
         String s = "{\"doc\" : {\"page_rank\" : " + pageRank + "}}";
         this.requestWithEntity(httppost, s);
 	}
-	
+
 	public String basicSearch(String query) throws ClientProtocolException, IOException {
         HttpGet httpget = new HttpGet(INDEX_URL + "/" + this.indexName + "/" + "_search?q=" + query);
 		CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -145,7 +145,7 @@ public class Indexer {
         httpclient.close();
         return responseString;
 	}
-	
+
 	public JsonObject pageRankedSearch(String query) throws ClientProtocolException, IOException {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "_search");
 
@@ -179,7 +179,7 @@ public class Indexer {
 		functionScore.add("function_score", functionScoreBody);
 		JsonObject wholeQuery = new JsonObject();
 		wholeQuery.add("query", functionScore);
-        
+
 //		System.err.println(wholeQuery.toString());
         String res = this.requestWithEntity(httppost, wholeQuery.toString());
 //        System.err.println(res);
@@ -187,14 +187,14 @@ public class Indexer {
 //        System.err.println(json.get("hits").getAsJsonObject().get("hits").getAsJsonArray().get(0).toString());
         return json.get("hits").getAsJsonObject();
 	}
-	
+
 	public String indexSearchScript() throws ClientProtocolException, IOException {
 		String pageRankScriptId = "pageRank_script";
         HttpPost httppost = new HttpPost(INDEX_URL + "/_scripts/mustache/" + pageRankScriptId);
         String script = "{\"script\" : \"_score * doc['page_rank'].value \"}";
         return requestWithEntity(httppost, script);
 	}
-	
+
 	public String requestWithEntity(HttpEntityEnclosingRequestBase httpRequest, String requestBody) throws ClientProtocolException, IOException {
 		StringEntity entity = new StringEntity(requestBody);
 		httpRequest.setEntity(entity);
@@ -204,9 +204,9 @@ public class Indexer {
         httpclient.close();
         return responseString;
 	}
-	
+
 	public TermVector getTermVector(int id) throws ClientProtocolException, IOException {
-        HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article/" + id + "/_termvectors");	
+        HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article/" + id + "/_termvectors");
         JsonArray fields = new JsonArray();
         fields.add(new JsonPrimitive("abstraction"));
         fields.add(new JsonPrimitive("title"));
@@ -215,10 +215,10 @@ public class Indexer {
         body.addProperty("term_statistics", true);
         String res = requestWithEntity(httppost, body.toString());
         System.out.println(res);
-        
+
         TermVector v = new TermVector(id);
         JsonObject json = new JsonParser().parse(res).getAsJsonObject();
-        JsonObject terms = 
+        JsonObject terms =
         		json.get("term_vectors").getAsJsonObject().get("abstraction").getAsJsonObject().get("terms").getAsJsonObject();
         for(Map.Entry<String, JsonElement> entry : terms.entrySet()) {
         	int tf = entry.getValue().getAsJsonObject().get("term_freq").getAsInt();
