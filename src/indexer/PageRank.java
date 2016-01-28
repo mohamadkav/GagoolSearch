@@ -33,7 +33,7 @@ public class PageRank {
 		}
 		System.err.println("Count of 1 entries: " + c);
 		pr.computeProbabilityMatrix();
-		pr.computePageRanks();
+		pr.computePageRanksByHand();
 		for(int i=0; i<N; i++)
 			s += pr.pageRank[i] + " " ;
 		System.err.println(s);
@@ -131,6 +131,33 @@ public class PageRank {
 		System.out.println("-----");
 	}
 
+	public void computePageRanksByHand() {
+		double[] x = new double[N];
+		x[0] = 1;
+		double[] prev = new double[N];
+		do {
+			for(int i=0; i<N; i++)
+				prev[i] = x[i];
+			for(int i=0; i<N; i++) {
+				x[i] = 0;
+				for(int j=0; j<N; j++) {
+					x[i] += prev[j] * pMat[j][i];
+				}
+			}
+		} while (iterationContinues(prev, x));
+	}
+	
+	private boolean iterationContinues(double[] prev, double[] curr) {
+		double max = 0;
+		for(int i=0; i<N; i++) {
+			if(Math.abs(prev[i] - curr[i]) > max)
+				max = Math.abs(prev[i] - curr[i]);
+		}
+		if(max < 0.001)
+			return false;
+		return true;
+	}
+	
 	public void setImaginaryPageRanks() {
 		Random rand = new Random();
 		for(int i=0; i<N; i++)

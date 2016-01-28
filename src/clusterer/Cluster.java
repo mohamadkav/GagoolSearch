@@ -3,20 +3,39 @@ package clusterer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class Cluster {
 
 	private Map<Integer, TermVector> articleVectors;
 	private TermVector centroid;
+	private int id;
+	private String clusterTitle;
 	
-	public Cluster() {
+	private Map<String, Integer> allTerms;
+	
+	public Cluster(int id) {
 		articleVectors = new HashMap<Integer, TermVector>();
 		centroid = new TermVector();
+		this.id = id;
 	}
 	
-	public Cluster(TermVector centroid) {
+	public Cluster(TermVector centroid, int id) {
 		articleVectors = new HashMap<Integer, TermVector>();
 		this.centroid = centroid;
+		this.id = id;
+	}
+	
+	public int getId() {
+		return this.id;
+	}
+
+	public String getTitle() {
+		return this.clusterTitle;
+	}
+	
+	public int getSize() {
+		return articleVectors.size();
 	}
 	
 	public TermVector getCentroid() {
@@ -48,13 +67,73 @@ public class Cluster {
 	public TermVector getArticleVector(int id) {
 		return articleVectors.get(id);
 	}
+
+	public Map<String, Integer> getAllTerms() {
+		return this.allTerms;
+	}
 	
 	public TermVector computeCentroid() {
-		Map<String, Double> vectorSum = new HashMap<String, Double>();
-		
+//		Map<String, Double> vectorSum = new HashMap<String, Double>();
+		centroid = new TermVector();
+		for(Map.Entry<Integer, TermVector> entry : articleVectors.entrySet()) {
+//			System.err.println("size of articleVectors: " + articleVectors.size() + " ---- ");
+			centroid.addTo(entry.getValue());
+		}
+		return centroid;
 	}
 	
 	public double getRSS() {
-		
+		double rss = 0;
+		for(Map.Entry<Integer, TermVector> entry : articleVectors.entrySet()) {
+			rss += centroid.distance(entry.getValue());
+		}		
+		return rss;
 	}
+	
+	public int numOfDocsContainingTerm(String term) {
+		int count = 0;
+		for(Map.Entry<Integer, TermVector> entry : articleVectors.entrySet()) {
+			TermVector v = entry.getValue();
+			if(v.getTermOcc(term) > 0)
+				count++;
+		}
+		return count;
+	}
+	
+	public void generateClusterTitle(Set<String> allTerms, Set<Cluster> clusters) {
+		clusterTitle = "title_" + id;
+		for(String term : allTerms) {
+			int n11 = this.numOfDocsContainingTerm(term);
+			int n01 = this.getSize() - n11;
+			int n = 0, n1x = 0;
+			for(Cluster c : clusters) {
+				n += c.getSize();
+				n1x += c.numOfDocsContainingTerm(term);
+			}
+			int n10 = n1x - n11;
+			int n00 = (n - this.getSize()) - n10;
+			
+			double info = 0;
+			info += (n11 / n) * Math.log(n*n11/(n10+n11)/(n01+n11));
+			info += (n01 / n) * Math.log(n*n01/(n00+n01)/(n01+n11));
+			info += (n10 / n) * Math.log(n*n10/(n10+n11)/(n00+n10));
+			info += (n00 / n) * Math.log(n*n00/(n00+n01)/(n00+n10));
+		}
+	}
+	
+//	public void aggregateAllTerms() {
+//		allTerms = new HashMap<String, Integer>();
+//		for(Map.Entry<Integer, TermVector> entry : articleVectors.entrySet()) {
+//			Map<String, Integer> terms = entry.getValue().getTerms();
+//			for(Map.Entry<String, Integer> termEntry : terms.entrySet()) {
+//				if(allTerms.containsKey(termEntry.getKey())) {
+//					int c = allTerms.get(termEntry.getKey());
+//					allTerms.put(termEntry.getKey(), termEntry.getValue() + c);
+//				}
+//				else {
+//					allTerms.put(termEntry.getKey(), termEntry.getValue());
+//				}
+//			}
+//		}
+//	}
 }

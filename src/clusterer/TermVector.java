@@ -11,7 +11,9 @@ public class TermVector {
 	private double length;
 	private int id;
 	
-	public TermVector() {}
+	public TermVector() {
+		normalizedVector = new HashMap<String, Double>();		
+	}
 	
 	public TermVector(int id) {
 		this.id = id;
@@ -21,10 +23,14 @@ public class TermVector {
 		return this.id;
 	}
 	
-	public static TermVector centroid(Set<TermVector> vectors) {
-		return null;
-	}
+//	public static TermVector centroid(Set<TermVector> vectors) {
+//		return null;
+//	}
 
+	public Map<String, Integer> getTerms() {
+		return this.terms;
+	}
+	
 	public void addTerm(String term) {
 		if(terms.containsKey(term))
 			terms.put(term, terms.get(term)+1);
@@ -50,8 +56,12 @@ public class TermVector {
 		this.computeLength();
 		normalizedVector = new HashMap<String, Double>();
 		for(Map.Entry<String, Integer> entry : terms.entrySet()) {
-			normalizedVector.put(entry.getKey(), (entry.getValue()/this.length));
+			normalizedVector.put(entry.getKey(), 100 * (entry.getValue()/this.length));
 		}
+	}
+	
+	public Map<String, Double> getVector() {
+		return normalizedVector;
 	}
 	
 	public double getLength() {
@@ -74,10 +84,44 @@ public class TermVector {
 	}	
 	
 	public double distance(TermVector v) {
-		return 0;
+		double s = 0;
+		Map<String, Double> v1 = this.normalizedVector; 
+		Map<String, Double> v2 = v.getVector();
+		for(Map.Entry<String, Double> entry : v1.entrySet()) {
+			if(v2.containsKey(entry.getKey()))
+				s += (entry.getValue() - v2.get(entry.getKey())) * (entry.getValue() - v2.get(entry.getKey()));
+			else
+				s += entry.getValue() * entry.getValue();
+		}
+		for(Map.Entry<String, Double> entry : v2.entrySet()) {
+			if(!v1.containsKey(entry.getKey()))
+				s += entry.getValue() * entry.getValue();
+		}
+//		return Math.sqrt(s);
+//		System.err.println(id + ", " + v.getId() + ": " + s);
+		return s;
 	}
 	
-	public int mostSimilar(Map<Integer, TermVector> vectors) {
-		return 0;
+	/**
+	 * When using this method the terms' map doesn't matter to us
+	 * @param v
+	 */
+	public void addTo(TermVector v) {
+		Map<String, Double> normalizedV = v.getVector();
+		Map<String, Double> newVector = new HashMap<String, Double>();
+		for(Map.Entry<String, Double> entry : normalizedVector.entrySet()) {
+			if(normalizedV.containsKey(entry.getKey()))
+				newVector.put(entry.getKey(), entry.getValue() + normalizedV.get(entry.getKey()));
+			else
+				newVector.put(entry.getKey(), entry.getValue());
+		}
+		normalizedVector = newVector;
 	}
+	
+	public void divideLength(double d) {
+		
+	}
+//	public int mostSimilar(Map<Integer, TermVector> vectors) {
+//		return 0;
+//	}
 }

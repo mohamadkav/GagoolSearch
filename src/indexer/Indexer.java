@@ -3,6 +3,8 @@ package indexer;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -19,6 +21,8 @@ import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
+import clusterer.Cluster;
+import clusterer.Clusterer;
 import clusterer.TermVector;
 
 import com.google.gson.JsonArray;
@@ -39,7 +43,7 @@ public class Indexer {
 //	private Core core;
 	
 	public static void main(String[] args) throws ClientProtocolException, IOException {
-		Indexer indexer = new Indexer("gagool");
+		Indexer indexer = new Indexer();
 //		indexer.createIndex();
 //		JsonObject sampleArticle = new JsonObject();
 //		sampleArticle.addProperty(Article.ID_KEY, "7");
@@ -50,17 +54,58 @@ public class Indexer {
 //		indexer.updateArticlePageRank(7, 0.2);
 //		String result = indexer.basicSearch("*");
 //		System.out.println(result);
-		System.out.println(indexer.pageRankedSearch("algorithm bayesian").toString());
+//		System.out.println(indexer.pageRankedSearch("algorithm bayesian").toString());
 //		indexer.addAllArticles();
 //		indexer.getTermVector(27);
 //		indexer.assignPageRanks();
+//		indexer.cluster(10);
+//		System.out.println(indexer.getAllClusters().toString());
 	}
 	
-	public Indexer(String name) {
-		this.indexName = name;	
+//	public Indexer(String name) {
+//		this.indexName = name;	
+//		pageRank = new PageRank();
+//	}
+
+	public Indexer() {
+		this.indexName = "gagool";
 		pageRank = new PageRank();
 	}
 	
+	/** UI Methods **/
+	public void indexify() throws ClientProtocolException, IOException {
+		this.addAllArticles();
+	}
+
+	public void cluster(int k) throws ClientProtocolException, IOException {
+		List<TermVector> vectors = new ArrayList<TermVector>();
+		for(int i=0; i<N; i++) {
+			try {
+				TermVector v = this.getTermVector(i);
+				if(v == null)
+					System.err.println(i);
+				else
+					vectors.add(v);
+			} catch (Exception e) {
+//				e.printStackTrace();
+				System.err.println(i);
+			}
+		}
+		Clusterer clusterer = new Clusterer(vectors);
+		clusterer.cluster(k);
+		for(Cluster c : clusterer.clusters) {
+			this.addClusterToIndex(c);
+			for(int id : c.getArticleIds()) {
+				this.updateArticleCluster(id, c);
+			}
+		}
+	}
+	
+	public void pageRank() throws FileNotFoundException {
+		this.assignPageRanks();
+	}
+
+	/** OTHER Methods **/
 	public void createIndex() throws ClientProtocolException, IOException {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
@@ -71,6 +116,25 @@ public class Indexer {
             httpclient.close();
         }	
     }
+	
+	public void setIndexSettings() {
+		// close the index
+		/**
+		 * trying to generate:
+		 * {
+		 * 	"settings": {
+		 * 		"analysis": {
+		 * 			"analyzer": {
+		 * 				"default": {
+		 * 					"tokenizer": "standard",
+		 * 				}
+		 * 			}
+		 * 		}
+		 * 	}
+		 * }
+		 */
+		// 	reopen the index
+	}
 	
 	public void removeIndex() {
 		
@@ -85,7 +149,7 @@ public class Indexer {
 //			s += scanner.nextLine();
 //		}
 //		scanner.close();
-		for(int i=1; i<=1000; i++) {
+		for(int i=3; i<=3; i++) {
 			String s = "";
 			Scanner scanner = new Scanner(new File(FILES_PATH + "\\docs\\" + i + ".json"));
 			while(scanner.hasNextLine()) {
@@ -114,7 +178,7 @@ public class Indexer {
 	
 	public String addArticle(JsonObject articleJson) throws ClientProtocolException, IOException {
 		int articleId = articleJson.get(Article.ID_KEY).getAsInt();
-		String articleString = articleJson.toString();		
+		String articleString = articleJson.toString();
         HttpPut httpput = new HttpPut(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId);
         return this.requestWithEntity(httpput, articleString);
 	}
@@ -137,8 +201,37 @@ public class Indexer {
         this.requestWithEntity(httppost, s);
 	}
 	
+	public String addClusterToIndex(Cluster c) throws ClientProtocolException, IOException {
+		JsonObject json = new JsonObject();
+		json.addProperty("cluster_id", c.getId());
+		json.addProperty("cluster_title", c.getTitle());
+        HttpPut httpput = new HttpPut(INDEX_URL + "/" + this.indexName + "/" + "cluster" + "/" + c.getId());
+        return this.requestWithEntity(httpput, json.toString());		
+	}
+	
+	public JsonArray getAllClusters() throws ClientProtocolException, IOException {
+        HttpGet httpget = new HttpGet(INDEX_URL + "/" + this.indexName + "/cluster/" + "_search?q=*");
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+        CloseableHttpResponse response = httpclient.execute(httpget);
+        String res = new BasicResponseHandler().handleResponse(response);
+        httpclient.close();
+        JsonObject json = new JsonParser().parse(res).getAsJsonObject();
+        JsonArray hits = json.get("hits").getAsJsonObject().get("hits").getAsJsonArray();
+        JsonArray clustersJson = new JsonArray();
+        for(int i=0; i<hits.size(); i++) {
+        	clustersJson.add(hits.get(i).getAsJsonObject().get("_source"));
+        }
+        return clustersJson;
+	}
+	
+	public void updateArticleCluster(int articleId, Cluster c) throws ClientProtocolException, IOException {
+        HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId + "/_update");
+        String s = "{\"doc\" : {\"cluster_id\" : " + c.getId() + "}}";
+        this.requestWithEntity(httppost, s);		
+	}
+	
 	public String basicSearch(String query) throws ClientProtocolException, IOException {
-        HttpGet httpget = new HttpGet(INDEX_URL + "/" + this.indexName + "/" + "_search?q=" + query);
+        HttpGet httpget = new HttpGet(INDEX_URL + "/" + this.indexName + "/article/" + "_search?q=" + query);
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         CloseableHttpResponse response = httpclient.execute(httpget);
         String responseString = new BasicResponseHandler().handleResponse(response);
@@ -147,7 +240,7 @@ public class Indexer {
 	}
 	
 	public JsonObject pageRankedSearch(String query) throws ClientProtocolException, IOException {
-        HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "_search");
+        HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/article/" + "_search");
 
         /**
          * Trying to generate this:
@@ -214,7 +307,7 @@ public class Indexer {
         body.add("fields", fields);
         body.addProperty("term_statistics", true);
         String res = requestWithEntity(httppost, body.toString());
-        System.out.println(res);
+//        System.out.println(res);
         
         TermVector v = new TermVector(id);
         JsonObject json = new JsonParser().parse(res).getAsJsonObject();
@@ -223,14 +316,15 @@ public class Indexer {
         for(Map.Entry<String, JsonElement> entry : terms.entrySet()) {
         	int tf = entry.getValue().getAsJsonObject().get("term_freq").getAsInt();
         	v.addTerm(entry.getKey(), tf);
-        	System.err.println(entry.getKey() + ": " + tf);
+//        	System.err.println(entry.getKey() + ": " + tf);
         }
         terms = json.get("term_vectors").getAsJsonObject().get("title").getAsJsonObject().get("terms").getAsJsonObject();
         for(Map.Entry<String, JsonElement> entry : terms.entrySet()) {
         	int tf = entry.getValue().getAsJsonObject().get("term_freq").getAsInt();
         	v.addTerm(entry.getKey(), tf);
-        	System.err.println(entry.getKey() + ": " + tf);
+//        	System.err.println(entry.getKey() + ": " + tf);
         }
+        v.normalize();
         return v;
 	}
 }
