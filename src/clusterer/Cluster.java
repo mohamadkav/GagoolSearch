@@ -3,7 +3,6 @@ package clusterer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class Cluster {
 
@@ -102,6 +101,7 @@ public class Cluster {
 	
 	public void generateClusterTitle(Set<String> allTerms, Set<Cluster> clusters) {
 		clusterTitle = "title_" + id;
+		Map<String, Double> topTerms = new HashMap<String, Double>();
 		for(String term : allTerms) {
 			int n11 = this.numOfDocsContainingTerm(term);
 			int n01 = this.getSize() - n11;
@@ -118,7 +118,29 @@ public class Cluster {
 			info += (n01 / n) * Math.log(n*n01/(n00+n01)/(n01+n11));
 			info += (n10 / n) * Math.log(n*n10/(n10+n11)/(n00+n10));
 			info += (n00 / n) * Math.log(n*n00/(n00+n01)/(n00+n10));
+			if(topTerms.size() < 5) {
+				topTerms.put(term, info);
+			}
+			else {
+				String minString = null;
+				double minVal = 0;
+				for(Map.Entry<String, Double> entry : topTerms.entrySet()) {
+					if(minString == null) {
+						minString = entry.getKey();
+						minVal = entry.getValue();
+					}
+					else if(entry.getValue() < minVal) {
+						minString = entry.getKey();
+						minVal = entry.getValue();
+					}
+				}
+			}
 		}
+		String title = "";
+		for(String s : topTerms.keySet())
+			title += s + " " ;
+		this.clusterTitle = title;
+		System.err.println("title for cluster " + this.id + " : " + title);
 	}
 	
 //	public void aggregateAllTerms() {

@@ -1,7 +1,6 @@
 package clusterer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +47,7 @@ public class Clusterer {
 		double prevRSS = 2*INF, currRSS = INF;	/** RSS abbreviates Residual Sum of Squares **/
 		int steps = 0;
 		while(clusteringContinues(prevRSS, currRSS, steps++)) {
-			System.err.println(steps + "th step of KMeans.");
+			System.out.println(steps + "th step of KMeans.");
 			for(Cluster c : clusters) {
 				c.renew();
 			}

@@ -14,7 +14,7 @@ public class PageRank {
 
 	private static final String FILES_PATH = System.getProperty("user.dir");
 	private static final int N = 1000;
-	private static final double ALPHA = 0.5;
+	private static double ALPHA = 0.2;
 	private static final double PRECISION = 0.01;
 	private int[][] adjMat;
 	private double[][] pMat;
@@ -59,6 +59,14 @@ public class PageRank {
 		return pageRank[i];
 	}
 
+	public void computePageRanks(double alpha) throws FileNotFoundException {
+		this.ALPHA = alpha;
+//		this.setImaginaryPageRanks();
+		this.consAdjMatFromFile();
+		this.computeProbabilityMatrix();
+		this.computePageRanksByHand();
+	}
+	
 	public void setAdjacencyMatrix(int[][] m) {
 		this.adjMat = m;
 	}
@@ -93,7 +101,7 @@ public class PageRank {
 			}
 			if(s > 0) {
 				for(int j=0; j<N; j++) {
-					pMat[i][j] = (adjMat[i][j] * (1.0 - ALPHA) / s) + (ALPHA / N);
+					pMat[i][j] = ((double)adjMat[i][j] * (1.0 - ALPHA) / s) + (ALPHA / N);
 				}
 			}
 			else {
@@ -104,7 +112,7 @@ public class PageRank {
 		}
 	}
 
-	public void computePageRanks() throws Exception {
+	public void computePageRanksEigenvector() throws Exception {
 		RealMatrix m = MatrixUtils.createRealMatrix(pMat);
 		EigenDecomposition ed = new EigenDecomposition(m.transpose());
 //		EigenDecomposition ed = new EigenDecomposition(m);
@@ -132,19 +140,26 @@ public class PageRank {
 	}
 
 	public void computePageRanksByHand() {
-		double[] x = new double[N];
-		x[0] = 1;
+		pageRank = new double[N];
+		for(int i=0; i<N; i++) {
+			pageRank[i] = 1.0 / N;
+		}
 		double[] prev = new double[N];
+		int counter = 0;
 		do {
 			for(int i=0; i<N; i++)
-				prev[i] = x[i];
+				prev[i] = pageRank[i];
 			for(int i=0; i<N; i++) {
-				x[i] = 0;
+				pageRank[i] = 0;
 				for(int j=0; j<N; j++) {
-					x[i] += prev[j] * pMat[j][i];
+					pageRank[i] += prev[j] * pMat[j][i];
 				}
 			}
-		} while (iterationContinues(prev, x));
+			String s = "";
+			for(int i=0; i<N; i++)
+				s += pageRank[i] + " ";
+			System.out.println("vector after " + counter++ + "th iteration: " + s);
+		} while (iterationContinues(prev, pageRank));
 	}
 	
 	private boolean iterationContinues(double[] prev, double[] curr) {

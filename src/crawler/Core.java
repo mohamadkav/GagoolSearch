@@ -48,19 +48,19 @@ public class Core {
         scheduler = Scheduler.getInstance();
         Document doc = downloader.getPage(FIRST_LINK);
         parser.parseFirstPage(doc);
-//        while (!isDone())
-//            downloader.run();
-//        cleanUpLogging();
-//        makeGraphFile();
-//        makeJson(getArticleJsons());
-
-        while (!isFriendDone()) {
-            System.out.println("==============================" + isFriendDone());
-            downloader.getWriterDocs();
-        }
+        while (!isDone())
+            downloader.run();
+        cleanUpLogging();
         makeGraphFile();
         makeJson(getArticleJsons());
-        makeAuthorsFile();
+
+//        while (!isFriendDone()) {
+//            System.out.println("==============================" + isFriendDone());
+//            downloader.getWriterDocs();
+//        }
+//        makeGraphFile();
+//        makeJson(getArticleJsons());
+//        makeAuthorsFile();
     }
 
     private void makeAuthorsFile() {

@@ -60,6 +60,12 @@ public class Indexer {
 //		indexer.assignPageRanks();
 //		indexer.cluster(10);
 //		System.out.println(indexer.getAllClusters().toString());
+//		JsonObject initial = indexer.pageRankedSearch("algorithm bayesian");
+//		System.out.println(initial);
+//		JsonArray secondary = indexer.filterResultsByCluster(initial, 6);
+//		System.out.println(secondary);
+//		indexer.pageRank(0.2);
+//		indexer.indexify();
 	}
 	
 //	public Indexer(String name) {
@@ -79,7 +85,7 @@ public class Indexer {
 
 	public void cluster(int k) throws ClientProtocolException, IOException {
 		List<TermVector> vectors = new ArrayList<TermVector>();
-		for(int i=0; i<N; i++) {
+		for(int i=1; i<=N; i++) {
 			try {
 				TermVector v = this.getTermVector(i);
 				if(v == null)
@@ -101,8 +107,8 @@ public class Indexer {
 		}
 	}
 	
-	public void pageRank() throws FileNotFoundException {
-		this.assignPageRanks();
+	public void pageRank(double alpha) throws FileNotFoundException {
+		this.assignPageRanks(alpha);
 	}
 
 	/** OTHER Methods **/
@@ -149,21 +155,25 @@ public class Indexer {
 //			s += scanner.nextLine();
 //		}
 //		scanner.close();
-		for(int i=3; i<=3; i++) {
+		for(int i=1; i<=1000; i++) {
+//			System.err.println(i);
 			String s = "";
 			Scanner scanner = new Scanner(new File(FILES_PATH + "\\docs\\" + i + ".json"));
 			while(scanner.hasNextLine()) {
 				s += scanner.nextLine();
 			}
-			scanner.close();			
+			scanner.close();
+//			System.err.println("scanner closed");
 			JsonParser parser = new JsonParser();
 			JsonObject article = parser.parse(s).getAsJsonObject();
 			try{
 				addArticle(article);
 			} catch (Exception e) {
-				System.err.println(s);
+//				System.err.println(s);
 				System.err.println(i);				
 			}
+			if(i % 50 == 0)
+				System.out.println(i + "th article added to index.");
 		}
 //		JsonParser parser = new JsonParser();
 //		JsonReader reader = new JsonReader(new FileReader("articles." + Core.JSON_FORMAT));
@@ -183,9 +193,9 @@ public class Indexer {
         return this.requestWithEntity(httpput, articleString);
 	}
 	
-	public void assignPageRanks() throws FileNotFoundException {
+	public void assignPageRanks(double alpha) throws FileNotFoundException {
 //		pageRank.consAdjMatFromFile();
-		pageRank.setImaginaryPageRanks();
+		pageRank.computePageRanks(alpha);
 		for(int i=0; i<N; i++) {
 			try {
 				updateArticlePageRank(i, pageRank.getPageRank(i));
@@ -281,6 +291,18 @@ public class Indexer {
         return json.get("hits").getAsJsonObject();
 	}
 	
+	public JsonArray filterResultsByCluster(JsonObject initialResult, int clusterId) {
+		JsonArray hitsArray = initialResult.get("hits").getAsJsonArray();
+		JsonArray result = new JsonArray();
+		for(int i=0; i<hitsArray.size(); i++) {
+			JsonObject hit = hitsArray.get(i).getAsJsonObject();
+			int id = Integer.parseInt(hit.get("_source").getAsJsonObject().get("cluster_id").toString());
+			if(id == clusterId)
+				result.add(hit);
+		}
+		return result;
+	}
+	
 	public String indexSearchScript() throws ClientProtocolException, IOException {
 		String pageRankScriptId = "pageRank_script";
         HttpPost httppost = new HttpPost(INDEX_URL + "/_scripts/mustache/" + pageRankScriptId);
@@ -293,9 +315,14 @@ public class Indexer {
 		httpRequest.setEntity(entity);
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         CloseableHttpResponse response = httpclient.execute(httpRequest);
-        String responseString = new BasicResponseHandler().handleResponse(response);
-        httpclient.close();
-        return responseString;
+        try {
+        	String responseString = new BasicResponseHandler().handleResponse(response);
+            httpclient.close();
+            return responseString;
+        } catch (Exception e) {
+        	
+        }
+        return null;
 	}
 	
 	public TermVector getTermVector(int id) throws ClientProtocolException, IOException {
