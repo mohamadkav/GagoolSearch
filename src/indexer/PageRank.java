@@ -58,7 +58,7 @@ public class PageRank {
 	public double getPageRank(int i) {
 		return pageRank[i];
 	}
-	
+
 	public void setAdjacencyMatrix(int[][] m) {
 		this.adjMat = m;
 	}
@@ -69,7 +69,7 @@ public class PageRank {
 		while(scanner.hasNextLine()) {
 			s += scanner.nextLine();
 		}
-		scanner.close();			
+		scanner.close();
 		s = s.replaceAll("\\[", "");
 		s = s.replaceAll("\\]", "");
 		String[] entries = s.split(",");
@@ -83,7 +83,7 @@ public class PageRank {
 			}
 		}
 	}
-	
+
 	public void computeProbabilityMatrix() {
 		for(int i=0; i<N; i++) {
 			int s = 0;
@@ -161,9 +161,9 @@ public class PageRank {
 	public void setImaginaryPageRanks() {
 		Random rand = new Random();
 		for(int i=0; i<N; i++)
-			pageRank[i] = rand.nextDouble(); 
+			pageRank[i] = rand.nextDouble();
 	}
-	
+
 	/**
 	 * normalize the vector such that its components add to 1
 	 */
