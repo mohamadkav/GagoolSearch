@@ -60,7 +60,7 @@ public class PageRank {
 	}
 
 	public void computePageRanks(double alpha) throws FileNotFoundException {
-		this.ALPHA = alpha;
+		ALPHA = alpha;
 //		this.setImaginaryPageRanks();
 		this.consAdjMatFromFile();
 		this.computeProbabilityMatrix();

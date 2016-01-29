@@ -8,6 +8,7 @@ public class TermVector {
 	private Map<String, Integer> terms = new HashMap<String, Integer>(); // number of occurrences of each term
 	private Map<String, Double> normalizedVector;
 	private double length;
+	private double normalizedLength;
 	private int id;
 	
 	public TermVector() {
@@ -51,12 +52,24 @@ public class TermVector {
 		length = Math.sqrt(length); 
 	}
 	
+	public void computeNormalizedLength() {
+		normalizedLength = 0;
+		for(Map.Entry<String, Double> entry : normalizedVector.entrySet())
+			normalizedLength += entry.getValue() * entry.getValue();
+		normalizedLength = Math.sqrt(normalizedLength); 		
+	}
+	
+	public double getNormalizedLength() {
+		return this.normalizedLength;
+	}
+	
 	public void normalize() {
 		this.computeLength();
 		normalizedVector = new HashMap<String, Double>();
 		for(Map.Entry<String, Integer> entry : terms.entrySet()) {
-			normalizedVector.put(entry.getKey(), 100 * (entry.getValue()/this.length));
+			normalizedVector.put(entry.getKey(), (entry.getValue()/length));
 		}
+		this.computeNormalizedLength();
 	}
 	
 	public Map<String, Double> getVector() {
@@ -64,6 +77,7 @@ public class TermVector {
 	}
 	
 	public double getLength() {
+		this.computeLength();
 		return this.length;
 	}
 	
@@ -114,13 +128,24 @@ public class TermVector {
 			else
 				newVector.put(entry.getKey(), entry.getValue());
 		}
+		for(Map.Entry<String, Double> entry : normalizedV.entrySet()) {
+			if(!normalizedVector.containsKey(entry.getKey()))
+				newVector.put(entry.getKey(), entry.getValue());
+		}
 		normalizedVector = newVector;
+		this.computeNormalizedLength();
 	}
 	
 	public void divideLength(double d) {
-		
+//		System.err.println(d);
+		this.computeNormalizedLength();
+//		System.err.println("before: " + this.getNormalizedLength());
+		Map<String, Double> newVector = new HashMap<String, Double>();
+		for(Map.Entry<String, Double> entry : normalizedVector.entrySet()) {
+			newVector.put(entry.getKey(), entry.getValue() / d);
+		}
+		normalizedVector = newVector;
+		this.computeNormalizedLength();
 	}
-//	public int mostSimilar(Map<Integer, TermVector> vectors) {
-//		return 0;
-//	}
+	
 }

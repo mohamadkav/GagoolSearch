@@ -78,6 +78,7 @@ public class Cluster {
 //			System.err.println("size of articleVectors: " + articleVectors.size() + " ---- ");
 			centroid.addTo(entry.getValue());
 		}
+		centroid.divideLength(this.getSize());
 		return centroid;
 	}
 	
@@ -102,6 +103,7 @@ public class Cluster {
 	public void generateClusterTitle(Set<String> allTerms, Set<Cluster> clusters) {
 		clusterTitle = "title_" + id;
 		Map<String, Double> topTerms = new HashMap<String, Double>();
+//		double infoSum = 0;
 		for(String term : allTerms) {
 			int n11 = this.numOfDocsContainingTerm(term);
 			int n01 = this.getSize() - n11;
@@ -114,10 +116,14 @@ public class Cluster {
 			int n00 = (n - this.getSize()) - n10;
 			
 			double info = 0;
-			info += (n11 / n) * Math.log(n*n11/(n10+n11)/(n01+n11));
-			info += (n01 / n) * Math.log(n*n01/(n00+n01)/(n01+n11));
-			info += (n10 / n) * Math.log(n*n10/(n10+n11)/(n00+n10));
-			info += (n00 / n) * Math.log(n*n00/(n00+n01)/(n00+n10));
+			info += ((double)n11 / n) * Math.log((double)n*n11/(n10+n11)/(n01+n11));
+			info += ((double)n01 / n) * Math.log((double)n*n01/(n00+n01)/(n01+n11));
+			info += ((double)n10 / n) * Math.log((double)n*n10/(n10+n11)/(n00+n10));
+			info += ((double)n00 / n) * Math.log((double)n*n00/(n00+n01)/(n00+n10));
+			if(Double.isNaN(info))
+				continue;
+//			infoSum += info;
+//			topTerms.put(term, info);
 			if(topTerms.size() < 5) {
 				topTerms.put(term, info);
 			}
@@ -134,28 +140,18 @@ public class Cluster {
 						minVal = entry.getValue();
 					}
 				}
+				if(info > minVal) {
+					topTerms.remove(minString);
+					topTerms.put(term, info);
+				}
 			}
 		}
+//		System.err.println(infoSum);
 		String title = "";
 		for(String s : topTerms.keySet())
 			title += s + " " ;
 		this.clusterTitle = title;
-		System.err.println("title for cluster " + this.id + " : " + title);
+		System.out.println("label for cluster " + this.id + " : " + title);
 	}
 	
-//	public void aggregateAllTerms() {
-//		allTerms = new HashMap<String, Integer>();
-//		for(Map.Entry<Integer, TermVector> entry : articleVectors.entrySet()) {
-//			Map<String, Integer> terms = entry.getValue().getTerms();
-//			for(Map.Entry<String, Integer> termEntry : terms.entrySet()) {
-//				if(allTerms.containsKey(termEntry.getKey())) {
-//					int c = allTerms.get(termEntry.getKey());
-//					allTerms.put(termEntry.getKey(), termEntry.getValue() + c);
-//				}
-//				else {
-//					allTerms.put(termEntry.getKey(), termEntry.getValue());
-//				}
-//			}
-//		}
-//	}
 }

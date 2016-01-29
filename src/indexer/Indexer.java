@@ -58,7 +58,7 @@ public class Indexer {
 //		indexer.addAllArticles();
 //		indexer.getTermVector(27);
 //		indexer.assignPageRanks();
-//		indexer.cluster(10);
+		indexer.cluster(10);
 //		System.out.println(indexer.getAllClusters().toString());
 //		JsonObject initial = indexer.pageRankedSearch("algorithm bayesian");
 //		System.out.println(initial);
@@ -85,13 +85,14 @@ public class Indexer {
 
 	public void cluster(int k) throws ClientProtocolException, IOException {
 		List<TermVector> vectors = new ArrayList<TermVector>();
-		for(int i=1; i<=N; i++) {
+		for(int i=1; i<=1000; i++) {
 			try {
 				TermVector v = this.getTermVector(i);
 				if(v == null)
 					System.err.println(i);
-				else
+				else {
 					vectors.add(v);
+				}
 			} catch (Exception e) {
 //				e.printStackTrace();
 				System.err.println(i);
