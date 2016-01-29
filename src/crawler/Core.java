@@ -48,6 +48,7 @@ public class Core {
         scheduler = Scheduler.getInstance();
         Document doc = downloader.getPage(FIRST_LINK);
         parser.parseFirstPage(doc);
+        System.out.println("0%");
         while (!isDone())
             downloader.run();
         cleanUpLogging();
@@ -137,6 +138,7 @@ public class Core {
         url = url.split("\\?")[0];
         Article article = new Article(title, url, nextDocId, abstraction);
         addAuthors(authors, article);
+        updateProgressBar();
         nextDocId++;
         makeJson(article);
         addToJson(article);
@@ -144,7 +146,7 @@ public class Core {
         setReferencesAndCitations(article, url);
         articles.put(url, article);
 //        System.out.println("---->" + url);
-        System.out.println(article);
+//        System.out.println(article);
 //        addArticleToGraph(article);
     }
 
@@ -162,6 +164,7 @@ public class Core {
     public void addArticle(String url, String title, String abstraction, ArrayList<String> references, ArrayList<String> citations) {
         url = url.split("\\?")[0];
         Article article = new Article(title, url, nextDocId, abstraction);
+        updateProgressBar();
         nextDocId++;
         makeJson(article);
         addToJson(article);
@@ -169,8 +172,12 @@ public class Core {
         setReferencesAndCitations(article, url);
         articles.put(url, article);
 //        System.out.println("---->" + url);
-        System.out.println(article);
+//        System.out.println(article);
 //        addArticleToGraph(article);
+    }
+
+    private void updateProgressBar() {
+        System.out.println("\r" + (nextDocId * 100.0) / REQUIRED_DOC_COUNT + "%");
     }
 
     private void makeJson(Article article) {
@@ -194,7 +201,7 @@ public class Core {
         url = url.split("\\?")[0];
         Article article = articles.get(baseUrl);
         if (article != null) { //if it is null it will come up later!
-            System.out.println("==========>BaseUrl-->" + baseUrl);
+//            System.out.println("==========>BaseUrl-->" + baseUrl);
             url = url.split("\\?")[0];
             Article tempArticle = referencesTemp.get(url);
             if (tempArticle != null) {
@@ -226,11 +233,11 @@ public class Core {
     private void addCitationsAndReferencesToTemp(Article article, ArrayList<String> references, ArrayList<String> citations) {
         for (String url : references) {
             referencesTemp.put(url, article);
-            System.out.println("REFERENCE: " + url);
+//            System.out.println("REFERENCE: " + url);
         }
         for (String url : citations) {
             citationsTemp.put(url, article);
-            System.out.println("CITATION: " + url);
+//            System.out.println("CITATION: " + url);
         }
     }
 

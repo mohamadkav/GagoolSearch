@@ -30,7 +30,7 @@ public class ItemPipeline {
         if (seen != null) {
             //TODO: add to references?!
             mCore.setReferencesAndCitations(preArticleUrl, Core.getAbsoluteUrl(url));
-            System.out.println("TEKRARI>>>>> " + Core.getAbsoluteUrl(url));
+//            System.out.println("TEKRARI>>>>> " + Core.getAbsoluteUrl(url));
         } else {
             mCore.scheduler.addUrl(Core.getAbsoluteUrl(url));
             seenUrls.put(Core.getAbsoluteUrl(url), true);

@@ -51,7 +51,7 @@ public class Downloader {
         url = mCore.scheduler.getNextUrl();
         while (url != null && !mCore.isDone()) {
 //            System.out.println("==>" + mCore.articlesJsonArray.toString());
-            System.out.println("downloading article: " + url);
+//            System.out.println("downloading article: " + url);
             pubId = getPublicationId(url);
             doc = getArticlePage(url);
 //            System.out.println(doc);
@@ -82,9 +82,9 @@ public class Downloader {
         url = mCore.scheduler.getNextUrl();
         while (url != null && !mCore.isFriendDone()) {
 
-            System.out.println("==============================" + mCore.isFriendDone());
+//            System.out.println("==============================" + mCore.isFriendDone());
 //            System.out.println("==>" + mCore.articlesJsonArray.toString());
-            System.out.println("downloading article: " + url);
+//            System.out.println("downloading article: " + url);
             pubId = getPublicationId(url);
             doc = getArticlePage(url);
 //            System.out.println(doc);

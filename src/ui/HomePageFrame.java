@@ -3,11 +3,14 @@ package ui;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import indexer.Indexer;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * Created by saeed on 1/24/2016.
@@ -17,26 +20,125 @@ public class HomePageFrame extends JFrame {
     public static final int FRAME_HEIGHT = 700;
     public static final int LOGO_HEIGHT = 100;
     public static final int MARGIN_HEIGHT = 30;
-    public static final int SUBMIT_BUTTON_Y = LOGO_HEIGHT + 2 * MARGIN_HEIGHT;
-    public static final String LOGO_IMAGE_JPG = "logo.jpg";
     public static final int QUERY_FIELD_HEIGHT = 30;
+    public static final int SUBMIT_BUTTON_WIDTH = 100;
+    public static final int INDEXER_BUTTON_Y = LOGO_HEIGHT + MARGIN_HEIGHT;
+    public static final int QUERY_FIELD_Y = INDEXER_BUTTON_Y + MARGIN_HEIGHT;
+    public static final int SUBMIT_BUTTON_Y = QUERY_FIELD_Y + MARGIN_HEIGHT;
+    public static final String LOGO_IMAGE_JPG = "logo.jpg";
     private Color bgColor = new Color(236, 230, 198);
     private JLabel logo;
     private JTextField queryField;
+    private JTextField kField;
     private JButton submitButton;
+    private JButton IndexifyButton;
+    private JButton clusterButton;
+    private JButton pageRankButton;
     private JsonObject testResult;
     private DefaultListModel<String> resultListModel;
     private JList resultsList;
     JScrollPane resultScrollPane;
+    private Indexer mIndexer;
 
     public HomePageFrame() {
+        mIndexer = new Indexer();
         setTest();
         setFrame();
         setLogo();
+        setIndexButton();
         setQueryField();
         setSubmitButton();
         setResultList();
         setVisible(true);
+    }
+
+    private void setIndexButton() {
+        setIndexifyButton();
+        setClusterButton();
+        setPageRankButton();
+    }
+
+    private void setClusterButton() {
+        clusterButton = new JButton("cluster");
+        clusterButton.setBounds(
+                3 * MARGIN_HEIGHT + 2 * SUBMIT_BUTTON_WIDTH,
+                INDEXER_BUTTON_Y,
+                SUBMIT_BUTTON_WIDTH,
+                QUERY_FIELD_HEIGHT
+        );
+        kField = new JTextField();
+        kField.setBounds(
+                4 * MARGIN_HEIGHT + 3 * SUBMIT_BUTTON_WIDTH,
+                INDEXER_BUTTON_Y,
+                SUBMIT_BUTTON_WIDTH,
+                QUERY_FIELD_HEIGHT
+        );
+        clusterButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //we hope the action is clicked :|
+                //TODO:
+                String kStr = kField.getText();
+                int k;
+                try {
+                    k = Integer.parseInt(kStr);
+                } catch (Exception ex) {
+                    k = 0;
+                }
+                try {
+                    mIndexer.cluster(k);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+        add(clusterButton);
+        add(kField);
+    }
+
+    private void setPageRankButton() {
+        pageRankButton = new JButton("page rank");
+        pageRankButton.setBounds(
+                2 * MARGIN_HEIGHT + SUBMIT_BUTTON_WIDTH,
+                INDEXER_BUTTON_Y,
+                SUBMIT_BUTTON_WIDTH,
+                QUERY_FIELD_HEIGHT
+        );
+        pageRankButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //we hope the action is clicked :|
+                try {
+                    mIndexer.pageRank(0.2);
+                } catch (FileNotFoundException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+        add(pageRankButton);
+    }
+
+    private void setIndexifyButton() {
+        IndexifyButton = new JButton("indexify");
+        IndexifyButton.setBounds(
+                MARGIN_HEIGHT,
+                INDEXER_BUTTON_Y,
+                SUBMIT_BUTTON_WIDTH,
+                QUERY_FIELD_HEIGHT
+        );
+        IndexifyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //we hope the action is clicked :|
+                //TODO: add search here!
+                try {
+                    mIndexer.indexify();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+        add(IndexifyButton);
     }
 
     private void setResultList() {
@@ -107,7 +209,7 @@ public class HomePageFrame extends JFrame {
         submitButton.setBounds(
                 MARGIN_HEIGHT,
                 SUBMIT_BUTTON_Y,
-                100,
+                SUBMIT_BUTTON_WIDTH,
                 QUERY_FIELD_HEIGHT
         );
         submitButton.addActionListener(new ActionListener() {
@@ -140,7 +242,7 @@ public class HomePageFrame extends JFrame {
         queryField = new JTextField();
         queryField.setEditable(true);
         queryField.setBounds(MARGIN_HEIGHT,
-                LOGO_HEIGHT + MARGIN_HEIGHT,
+                QUERY_FIELD_Y,
                 FRAME_WIDTH - 2 * MARGIN_HEIGHT,
                 QUERY_FIELD_HEIGHT);
         queryField.setHorizontalAlignment(SwingConstants.CENTER);

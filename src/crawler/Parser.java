@@ -52,9 +52,9 @@ public class Parser {
         element = elements.first();
         elements = doc.select("meta[name=citation_author]");
         ArrayList<String> authors = new ArrayList<>();
-        System.out.println("authors:-> " + elements.size());
+//        System.out.println("authors:-> " + elements.size());
         for (Element author : elements) {
-            System.out.println("--> " + author.attr("content"));
+//            System.out.println("--> " + author.attr("content"));
             authors.add(author.attr("content"));
         }
         mCore.addArticle(url, element.html(), abstraction, references, citations, authors);
