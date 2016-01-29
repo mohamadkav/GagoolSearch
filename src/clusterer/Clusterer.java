@@ -12,6 +12,7 @@ public class Clusterer {
 	
 	private List<TermVector> vectors;
 	public Set<Cluster> clusters;
+	private double RSS;
 
 //	private Map<String, Integer> allClustersTerms;
 	private Set<String> allTerms;
@@ -19,15 +20,19 @@ public class Clusterer {
 	public Clusterer(List<TermVector> vectors) {
 		this.vectors = vectors;
 	}
+
+	public double getRSS() {
+		return this.RSS;
+	}
 	
 	public void cluster(int k) {
-		System.out.println("running KMeans started.");
+//		System.out.println("running KMeans started.");
 		clusters = KMeans(k);
 		for(Cluster c : clusters) {
-			System.out.println("size of the " + c.getId() + "th cluster: " + c.getSize());
+//			System.out.println("size of the " + c.getId() + "th cluster: " + c.getSize());
 		}
 		this.aggregateAllTerms();
-		System.out.println("generating cluster labels started");
+//		System.out.println("generating cluster labels started");
 		for(Cluster c : clusters) {
 			c.generateClusterTitle(allTerms, clusters);
 		}
@@ -38,7 +43,7 @@ public class Clusterer {
 	 * @param k: indicates number of clusters
 	 */
 	public Set<Cluster> KMeans(int k) {
-		System.out.println("KMeans started.");
+//		System.out.println("KMeans started.");
 		Set<Cluster> clusters = new HashSet<Cluster>();
 		// choose k random centroids
 		initializeClusters(clusters, k);
@@ -46,7 +51,7 @@ public class Clusterer {
 		double prevRSS = 2*INF, currRSS = INF;	/** RSS abbreviates Residual Sum of Squares **/
 		int steps = 0;
 		while(clusteringContinues(prevRSS, currRSS, steps++)) {
-			System.out.println(steps + "th step of KMeans.");
+//			System.out.println(steps + "th step of KMeans.");
 			for(Cluster c : clusters) {
 				c.renew();
 			}
@@ -68,9 +73,9 @@ public class Clusterer {
 			}			
 			prevRSS = currRSS;
 			currRSS = computeRSS(clusters);
-			System.out.println("RSS: " + currRSS);
+//			System.out.println("RSS: " + currRSS);
 		}
-		
+		this.RSS = currRSS;
 		return clusters;
 	}
 	

@@ -151,7 +151,7 @@ public class Cluster {
 		for(String s : topTerms.keySet())
 			title += s + " " ;
 		this.clusterTitle = title;
-		System.out.println("label for cluster " + this.id + " : " + title);
+//		System.out.println("label for cluster " + this.id + " : " + title);
 	}
 	
 }

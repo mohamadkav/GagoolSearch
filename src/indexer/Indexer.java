@@ -58,7 +58,7 @@ public class Indexer {
 //		indexer.addAllArticles();
 //		indexer.getTermVector(27);
 //		indexer.assignPageRanks();
-		indexer.cluster(10);
+//		indexer.cluster(10);
 //		System.out.println(indexer.getAllClusters().toString());
 //		JsonObject initial = indexer.pageRankedSearch("algorithm bayesian");
 //		System.out.println(initial);
@@ -66,6 +66,7 @@ public class Indexer {
 //		System.out.println(secondary);
 //		indexer.pageRank(0.2);
 //		indexer.indexify();
+//		indexer.optimalCluteringUtility();
 	}
 	
 //	public Indexer(String name) {
@@ -76,6 +77,33 @@ public class Indexer {
 	public Indexer() {
 		this.indexName = "gagool";
 		pageRank = new PageRank();
+	}
+
+	public void optimalCluteringUtility() {
+		List<TermVector> vectors = new ArrayList<TermVector>();
+		for(int i=1; i<=1000; i++) {
+			try {
+				TermVector v = this.getTermVector(i);
+				if(v == null)
+					System.err.println(i);
+				else {
+					vectors.add(v);
+				}
+			} catch (Exception e) {
+//				e.printStackTrace();
+				System.err.println(i);
+			}
+		}
+		for(int k=1; k<=6; k++) {
+			Clusterer clusterer = new Clusterer(vectors);
+			clusterer.cluster(k);
+			System.out.println("for " + k + " clusters, RSS is: " + clusterer.getRSS());
+		}
+		for(int k=11; k<=16; k++) {
+			Clusterer clusterer = new Clusterer(vectors);
+			clusterer.cluster(k);
+			System.out.println("for " + k + " clusters, RSS is: " + clusterer.getRSS());
+		}
 	}
 	
 	/** UI Methods **/
@@ -267,7 +295,7 @@ public class Indexer {
 			}
          */
         JsonObject script = new JsonObject();
-		script.addProperty("script", "_score * Float.parseFloat(doc['page_rank'].value)");
+		script.addProperty("script", "_score +  Float.parseFloat(doc['page_rank'].value)");
 		JsonObject scriptScore = new JsonObject();
 		scriptScore.add("script_score", script);
 		JsonArray functions = new JsonArray();
@@ -277,6 +305,7 @@ public class Indexer {
 		JsonObject queryJson = new JsonObject();
 		queryJson.add("match", field);
 		JsonObject functionScoreBody = new JsonObject();
+//		functionScoreBody.addProperty("query", "\"bool\": {\"should\": [{\"match\": {\"title\":\"" + query + "\"}},{\"match\": {\"abstraction\":\"" + query + "\"}}]}");
 		functionScoreBody.add("query", queryJson);
 		functionScoreBody.add("functions", functions);
 		JsonObject functionScore = new JsonObject();
