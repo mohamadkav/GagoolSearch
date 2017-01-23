@@ -18,21 +18,20 @@ import java.util.HashMap;
  * Created by saeed on 1/4/2016.
  */
 public class Core {
-    public static final int REQUIRED_DOC_COUNT = 1000;
-    public static final String DOCS_JSON_DIR = "docs";
-    public static final String JSON_FORMAT = ".json";
-    public static final String LINKS_MATRIX_FILE = "links.matrix";
+    private static final int REQUIRED_DOC_COUNT = 1000;
+    private static final String DOCS_JSON_DIR = "docs";
+    private static final String JSON_FORMAT = ".json";
+    private static final String LINKS_MATRIX_FILE = "links.matrix";
     private static final int REQUIRED_FRIEND_COUNT = 100;
-    public static String BASE_URL = "https://www.researchgate.net/";
-    public static final String FIRST_LINK = "https://www.researchgate.net/researcher/8159937_Zoubin_Ghahramani";
-    public static Formatter log;
+    private static String BASE_URL = "https://fa.wikipedia.org/";
+    private static final String FIRST_LINK = "https://fa.wikipedia.org/wiki/%D8%B3%D8%B9%D8%AF%DB%8C";
+    private static Formatter log;
     private boolean[][] linkGraph;
-    int nextDocId = 1;
-    Downloader downloader;
-    ItemPipeline itemPipeline;
-    Parser parser;
-    Scheduler scheduler;
-    JsonArray articlesJsonArray;
+    private int nextDocId = 1;
+    private ItemPipeline itemPipeline;
+    private Parser parser;
+    private Scheduler scheduler;
+    private JsonArray articlesJsonArray;
 
     private HashMap<String, ArrayList<Integer>> authorsDocs = new HashMap<>();
     private HashMap<String, Article> referencesTemp = new HashMap<>();
@@ -42,7 +41,7 @@ public class Core {
     public Core() throws FileNotFoundException {
         initializeLogging();
         initializeJson();
-        downloader = Downloader.getInstance(this);
+        Downloader downloader = Downloader.getInstance(this);
         itemPipeline = ItemPipeline.getInstance(this);
         parser = Parser.getInstance(this);
         scheduler = Scheduler.getInstance();
@@ -192,7 +191,8 @@ public class Core {
         try (FileWriter file = new FileWriter("articles" + JSON_FORMAT)) {
             file.write(articles.toString());
         } catch (Exception e) {
-            makeJson(articles);
+            e.printStackTrace();
+        //    makeJson(articles);
         }
     }
 
@@ -252,5 +252,27 @@ public class Core {
         return jsonObject;
     }
 
+    public ItemPipeline getItemPipeline() {
+        return itemPipeline;
+    }
 
+    public void setItemPipeline(ItemPipeline itemPipeline) {
+        this.itemPipeline = itemPipeline;
+    }
+
+    public Parser getParser() {
+        return parser;
+    }
+
+    public void setParser(Parser parser) {
+        this.parser = parser;
+    }
+
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
 }

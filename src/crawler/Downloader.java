@@ -1,11 +1,10 @@
 package crawler;
 
 import com.sun.istack.internal.Nullable;
-import models.Article;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -26,7 +25,7 @@ public class Downloader {
     public static final String USER_AGENT_VALUE = "Mozilla/5.0 (Macintosh;Intel Mac OS X 10_11_2) AppleWebKit/537.36(KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
     public static final String X_REQUEST_WITH_VALUE = "XMLHttpRequest";
     public static final String ACCEPT_VALUE = "application/json";
-    public static final String AUTHORITY_VALUE = "www.researchgate.net";
+    public static final String AUTHORITY_VALUE = "fa.wikipedia.org";
     private static Downloader mInstance;
     private Core mCore;
     public static final String URL_PATTERN = "^[a-zA-Z/.:]+([0-9]+).*";
@@ -48,7 +47,7 @@ public class Downloader {
         String articleUrl;
         String pubId;
         Document doc;
-        url = mCore.scheduler.getNextUrl();
+        url = mCore.getScheduler().getNextUrl();
         while (url != null && !mCore.isDone()) {
 //            System.out.println("==>" + mCore.articlesJsonArray.toString());
 //            System.out.println("downloading article: " + url);
@@ -60,15 +59,16 @@ public class Downloader {
                 try {
                     references = getReferences(url, pubId);
                     citations = getCitations(url, pubId);
-                    mCore.parser.parseDoc(url, doc, references, citations);
-                    url = mCore.scheduler.getNextUrl();
+                    mCore.getParser().parseDoc(url, doc, references, citations);
+                    url = mCore.getScheduler().getNextUrl();
                 } catch (IOException e) {
                     System.out.println("internet exception :| added the link to the scheduler!");
 //                    mCore.scheduler.addUrl(url);
                 } catch (Exception e) {
+                    e.printStackTrace();
 //                    mCore.log("Ignored " + url);
                     System.out.println("Ignored " + url);
-                    url = mCore.scheduler.getNextUrl();
+                    url = mCore.getScheduler().getNextUrl();
                 }
             }
         }
@@ -79,7 +79,7 @@ public class Downloader {
         String articleUrl;
         String pubId;
         Document doc;
-        url = mCore.scheduler.getNextUrl();
+        url = mCore.getScheduler().getNextUrl();
         while (url != null && !mCore.isFriendDone()) {
 
 //            System.out.println("==============================" + mCore.isFriendDone());
@@ -93,15 +93,15 @@ public class Downloader {
                 try {
                     references = getReferences(url, pubId);
                     citations = getCitations(url, pubId);
-                    mCore.parser.parsFriendDoc(url, doc, references, citations);
-                    url = mCore.scheduler.getNextUrl();
+                    mCore.getParser().parsFriendDoc(url, doc, references, citations);
+                    url = mCore.getScheduler().getNextUrl();
                 } catch (IOException e) {
                     System.out.println("internet exception :| added the link to the scheduler!");
 //                    mCore.scheduler.addUrl(url);
                 } catch (Exception e) {
 //                    mCore.log("Ignored " + url);
                     System.out.println("Ignored " + url);
-                    url = mCore.scheduler.getNextUrl();
+                    url = mCore.getScheduler().getNextUrl();
                 }
             }
         }
@@ -113,7 +113,7 @@ public class Downloader {
             return Jsoup.connect(url).get();
         } catch (Exception e) {
             System.out.println("time_out_in: link. the article had been added to the list again!");
-            mCore.scheduler.addUrl(url);
+            mCore.getScheduler().addUrl(url);
             return null;
         }
     }
@@ -147,12 +147,12 @@ public class Downloader {
 
     private ArrayList<String> getCitesRefs(String url, String ref, boolean isReference) throws IOException {
         HttpResponse response = getAjaxResult(ref, url);
-        return mCore.parser.parseCiteRefResponse(ref, url, response, isReference);
+        return mCore.getParser().parseCiteRefResponse(ref, url, response, isReference);
     }
 
 
     private HttpResponse getAjaxResult(String ref, String url) throws IOException {
-        HttpClient client = new DefaultHttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet(url);
         request.addHeader(AUTHORITY_HEADER, AUTHORITY_VALUE);
         request.addHeader(ACCEPT_HEADER, ACCEPT_VALUE);

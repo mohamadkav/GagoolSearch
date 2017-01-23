@@ -9,9 +9,8 @@ import java.util.HashSet;
 public class ItemPipeline {
     private static ItemPipeline mInstance;
     private Core mCore;
-    HashMap<String, Boolean> seenUrls;
-    HashMap<String, HashSet<String>> referenced = new HashMap<>();
-    HashMap<String, HashSet<String>> citedIn = new HashMap<>();
+    private HashMap<String, Boolean> seenUrls;
+    private HashMap<String, HashSet<String>> referenced = new HashMap<>();
 
     private ItemPipeline(Core core) {
         mCore = core;
@@ -32,7 +31,7 @@ public class ItemPipeline {
             mCore.setReferencesAndCitations(preArticleUrl, Core.getAbsoluteUrl(url));
 //            System.out.println("TEKRARI>>>>> " + Core.getAbsoluteUrl(url));
         } else {
-            mCore.scheduler.addUrl(Core.getAbsoluteUrl(url));
+            mCore.getScheduler().addUrl(Core.getAbsoluteUrl(url));
             seenUrls.put(Core.getAbsoluteUrl(url), true);
             if (isReference) {
                 HashSet<String> references = referenced.get(baseUrl);
@@ -42,10 +41,7 @@ public class ItemPipeline {
                 references.add(url);
                 referenced.put(baseUrl, references);
             } else {
-                HashSet<String> cites = citedIn.get(baseUrl);
-                if (cites == null) {
-                    cites = new HashSet<>();
-                }
+                HashSet<String> cites  = new HashSet<>();
                 cites.add(url);
                 referenced.put(baseUrl, cites);
             }

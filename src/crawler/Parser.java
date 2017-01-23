@@ -38,7 +38,7 @@ public class Parser {
         for (int i = 0; i < ((listOfFirstDocsHeaders.size() > 10) ? 10 : listOfFirstDocsHeaders.size()); i++) {
             Element header = listOfFirstDocsHeaders.get(i);
             String url = processHeaders(header);
-            mCore.scheduler.addUrl(Core.getAbsoluteUrl(url));
+            mCore.getScheduler().addUrl(Core.getAbsoluteUrl(url));
         }
     }
 
@@ -65,6 +65,7 @@ public class Parser {
             throws Exception {
 //        if (url.contains("273488773"))
 //            System.out.println(doc);
+        System.out.println(doc);
         Elements elements = doc.select(".pub-abstract div div");
         Element element;
 //        if (elements == null || elements.html().equals("")) {
@@ -102,7 +103,7 @@ public class Parser {
             String response = buildResponseFromEntity(httpResponse.getEntity());
             ArrayList<String[]> citations = parseCitationsJson(response);
             for (String[] citation : citations) {
-                mCore.itemPipeline.addUrl(preArticleUrl, url, citation[1], isReference);
+                mCore.getItemPipeline().addUrl(preArticleUrl, url, citation[1], isReference);
                 citationsUrl.add(Core.getAbsoluteUrl(citation[1]));
             }
         } catch (IOException e) {

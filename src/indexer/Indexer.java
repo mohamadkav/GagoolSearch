@@ -215,7 +215,7 @@ public class Indexer {
 //		}
 	}
 	
-	public String addArticle(JsonObject articleJson) throws ClientProtocolException, IOException {
+	public String addArticle(JsonObject articleJson) throws IOException {
 		int articleId = articleJson.get(Article.ID_KEY).getAsInt();
 		String articleString = articleJson.toString();
         HttpPut httpput = new HttpPut(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId);

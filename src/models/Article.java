@@ -9,7 +9,6 @@ import java.util.ArrayList;
  * Created by saeed on 12/29/2015.
  */
 public class Article {
-    public static final String AUTHORS = "authors";
     public static String ID_KEY = "id";
     public static String TITLE_KEY = "title";
     public static String URL_KEY = "url";
