@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by saeed on 12/29/2015.
@@ -13,38 +14,26 @@ public class Article {
     public static String TITLE_KEY = "title";
     public static String URL_KEY = "url";
     public static String ABSTRACTION_KEY = "abstraction";
+    public static String REF_KEY = "referredURLs";
 
-    int id;
-    String title;
-    String url;
-    String abstraction;
 
-    ArrayList<Article> references = new ArrayList<>();
-    ArrayList<Article> citations = new ArrayList<>();
+    private int id;
+    private String title;
+    private String url;
+    private String abstraction;
+    private List<String> referredURLs;
 
-    public Article(String title, String url, int id, String abstraction) {
+    public Article(String title, String url, int id, String abstraction,List<String>referredURLs) {
         this.title = title;
         this.url = url;
         this.id = id;
         this.abstraction = abstraction;
+        this.referredURLs=referredURLs;
     }
 
     @Override
     public String toString() {
-        String string = "ID:" + id + "\nTITLE:" + title + "\n\tURL:" + url + "\n\nABSTRACTION:" + abstraction
-                + "\n==========================\n"
-                + "References(" + references.size() + "):";
-        for (Article article : references) {
-            string += "\n" + article.id + " - " + article.title;
-        }
-        string += "\n==========================\n"
-                + "Citations(" + citations.size() + "):";
-        for (Article article : citations) {
-            string += "\n" + article.id + " - " + article.title;
-        }
-
-
-        return string;
+        return "ID:" + id + "\nTITLE:" + title + "\n\tURL:" + url + "\n\nABSTRACTION:" + abstraction;
     }
 
     public String getTitle() {
@@ -63,23 +52,21 @@ public class Article {
         return abstraction;
     }
 
+    public List<String> getReferredURLs() {
+        return referredURLs;
+    }
+
+    public void setReferredURLs(List<String> referredURLs) {
+        this.referredURLs = referredURLs;
+    }
+
     public JsonObject getJsonObject() {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty(Article.ID_KEY, id);
         jsonObject.addProperty(Article.TITLE_KEY, title);
         jsonObject.addProperty(Article.URL_KEY, url);
         jsonObject.addProperty(Article.ABSTRACTION_KEY, abstraction);
-//        Gson gson = new Gson();
-//        jsonObject.addProperty("references", gson.toJson(references));
-//        jsonObject.addProperty("citations", gson.toJson(citations));
         return jsonObject;
     }
 
-    public void addReference(Article article) {
-        references.add(article);
-    }
-
-    public void addCitation(Article article) {
-        citations.add(article);
-    }
 }

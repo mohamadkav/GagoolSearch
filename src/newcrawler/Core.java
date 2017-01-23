@@ -1,13 +1,13 @@
 package newcrawler;
 
 import com.google.gson.JsonArray;
+import models.Article;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.io.FileWriter;
+import java.util.*;
 
 /**
  * Created by mohammad on 1/23/17.
@@ -19,31 +19,49 @@ public class Core {
     private static final String DOCS_JSON_DIR = "docs";
     private static final String JSON_FORMAT = ".json";
     private static final String LINKS_MATRIX_FILE = "links.matrix";
-    private static final int REQUIRED_FRIEND_COUNT = 100;
-    private static String BASE_URL = "https://fa.wikipedia.org/";
+    private static final String BASE_URL = "https://fa.wikipedia.org/";
     private static final String FIRST_LINK = "https://fa.wikipedia.org/wiki/%D8%B3%D8%B9%D8%AF%DB%8C";
-    private static int nextDocId=0;
-
     private static final ArrayList<String> FIRST_DOCS= new ArrayList<String>(){{add(FIRST_LINK);}};
+    private static final Random random = new Random();
 
+    private int nextDocId=0;
+    private HashMap<String, Article> articles = new HashMap<>();
     public Core() {
-        for(String url:FIRST_DOCS){
-            try {
-                Document document = Jsoup.connect(url).get();
-                String abs=Parser.getAbstractFromDoc(document);
-                int docId=++nextDocId;
-                String title=Parser.getTitleFromDoc(document);
+        initializeJson();
+    }
 
-
-                System.out.println("ABS: "+abs);
-                System.out.println("ID: "+docId);
-                System.out.println("TITLE: "+title);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+    public void execute(){
+        for(String url:FIRST_DOCS)
+            doURL(url);
+        while(articles.size()<REQUIRED_DOC_COUNT){
+            List<String> keysAsArray = new ArrayList<>(articles.keySet());
+            Article article=articles.get(keysAsArray.get(random.nextInt(articles.size())));
+            doURL(article.getReferredURLs().get(random.nextInt(article.getReferredURLs().size())));
         }
     }
 
+    private void doURL(String url){
+        try {
+            if(articles.containsKey(url))
+                return;
+            Document document = Jsoup.connect(url).get();
+            String abs=Parser.getAbstractFromDoc(document);
+            int docId=++nextDocId;
+            String title=Parser.getTitleFromDoc(document);
+            List<String> outLinks=Parser.extractLinksFromDoc(document);
+            Article article=new Article(title,url,docId,abs,outLinks);
+            makeJson(article);
+            addToJson(article);
+            articles.put(url,article);
+/*                System.out.println("ABS: "+abs);
+                System.out.println("ID: "+docId);
+                System.out.println("TITLE: "+title);
+                for(String out:outLinks)
+                    System.out.println(out);*/
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
     private void initializeJson() {
         articlesJsonArray = new JsonArray();
         linkGraph = new boolean[REQUIRED_DOC_COUNT + 1][REQUIRED_DOC_COUNT + 1];
@@ -58,4 +76,17 @@ public class Core {
             }
         }
     }
+
+    private void makeJson(Article article) {
+        try (FileWriter file = new FileWriter(DOCS_JSON_DIR + "/" + article.getId() + JSON_FORMAT)) {
+            file.write(article.getJsonObject().toString());
+        } catch (Exception e) {
+            makeJson(article);
+        }
+    }
+
+    private void addToJson(Article article) {
+        articlesJsonArray.add(article.getJsonObject());
+    }
+
 }

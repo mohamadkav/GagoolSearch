@@ -1,4 +1,3 @@
-import crawler.Core;
 import newcrawler.Parser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -19,6 +18,6 @@ public class Main {
 
 
     public static void main(String[] args) throws Exception{
-        new newcrawler.Core();
+        new newcrawler.Core().execute();
     }
 }

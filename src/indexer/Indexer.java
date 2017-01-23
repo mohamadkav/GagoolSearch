@@ -39,73 +39,12 @@ public class Indexer {
 
 	private String indexName;
 	private PageRank pageRank;
-	
-//	private Core core;
-	
-	public static void main(String[] args) throws ClientProtocolException, IOException {
-		Indexer indexer = new Indexer();
-//		indexer.createIndex();
-//		JsonObject sampleArticle = new JsonObject();
-//		sampleArticle.addProperty(Article.ID_KEY, "7");
-//		sampleArticle.addProperty(Article.TITLE_KEY, "seventh article");
-//		sampleArticle.addProperty(Article.URL_KEY, "seventh.url");
-//		sampleArticle.addProperty(Article.ABSTRACTION_KEY, "TV sucks, thank to the internte!");
-//		System.out.println(indexer.addArticle(sampleArticle));
-//		indexer.updateArticlePageRank(7, 0.2);
-//		String result = indexer.basicSearch("*");
-//		System.out.println(result);
-//		System.out.println(indexer.pageRankedSearch("algorithm bayesian").toString());
-//		indexer.addAllArticles();
-//		indexer.getTermVector(27);
-//		indexer.assignPageRanks();
-//		indexer.cluster(10);
-//		System.out.println(indexer.getAllClusters().toString());
-//		JsonObject initial = indexer.pageRankedSearch("algorithm bayesian");
-//		System.out.println(initial);
-//		JsonArray secondary = indexer.filterResultsByCluster(initial, 6);
-//		System.out.println(secondary);
-//		indexer.pageRank(0.2);
-//		indexer.indexify();
-//		indexer.optimalCluteringUtility();
-	}
-	
-//	public Indexer(String name) {
-//		this.indexName = name;	
-//		pageRank = new PageRank();
-//	}
 
 	public Indexer() {
 		this.indexName = "gagool";
 		pageRank = new PageRank();
 	}
 
-	public void optimalCluteringUtility() {
-		List<TermVector> vectors = new ArrayList<TermVector>();
-		for(int i=1; i<=1000; i++) {
-			try {
-				TermVector v = this.getTermVector(i);
-				if(v == null)
-					System.err.println(i);
-				else {
-					vectors.add(v);
-				}
-			} catch (Exception e) {
-//				e.printStackTrace();
-				System.err.println(i);
-			}
-		}
-		for(int k=1; k<=6; k++) {
-			Clusterer clusterer = new Clusterer(vectors);
-			clusterer.cluster(k);
-			System.out.println("for " + k + " clusters, RSS is: " + clusterer.getRSS());
-		}
-		for(int k=11; k<=16; k++) {
-			Clusterer clusterer = new Clusterer(vectors);
-			clusterer.cluster(k);
-			System.out.println("for " + k + " clusters, RSS is: " + clusterer.getRSS());
-		}
-	}
-	
 	/** UI Methods **/
 	public void indexify() throws ClientProtocolException, IOException {
 		this.addAllArticles();
@@ -140,40 +79,7 @@ public class Indexer {
 		this.assignPageRanks(alpha);
 	}
 
-	/** OTHER Methods **/
-	public void createIndex() throws ClientProtocolException, IOException {
-		CloseableHttpClient httpclient = HttpClients.createDefault();
-        try {
-            HttpPut httpput = new HttpPut(INDEX_URL + "/" + this.indexName);
-            CloseableHttpResponse response = httpclient.execute(httpput);
-            System.out.println(response.getEntity());
-        } finally {
-            httpclient.close();
-        }	
-    }
-	
-	public void setIndexSettings() {
-		// close the index
-		/**
-		 * trying to generate:
-		 * {
-		 * 	"settings": {
-		 * 		"analysis": {
-		 * 			"analyzer": {
-		 * 				"default": {
-		 * 					"tokenizer": "standard",
-		 * 				}
-		 * 			}
-		 * 		}
-		 * 	}
-		 * }
-		 */
-		// 	reopen the index
-	}
-	
-	public void removeIndex() {
-		
-	}
+
 		
 	public void addAllArticles() throws ClientProtocolException, IOException {
 //		JsonArray articles = core.getArticleJsons().get("articles").getAsJsonArray();
@@ -204,15 +110,6 @@ public class Indexer {
 			if(i % 50 == 0)
 				System.out.println(i + "th article added to index.");
 		}
-//		JsonParser parser = new JsonParser();
-//		JsonReader reader = new JsonReader(new FileReader("articles." + Core.JSON_FORMAT));
-		
-//		JsonArray articles = parser.parse(s).getAsJsonObject().get("articles").getAsJsonArray();
-//		System.err.println("articles size: " + articles.size());
-//		for(int i=0; i<articles.size(); i++) {
-//			addArticle(articles.get(i).getAsJsonObject());
-//			System.err.println(i);
-//		}
 	}
 	
 	public String addArticle(JsonObject articleJson) throws IOException {
@@ -247,99 +144,13 @@ public class Indexer {
         HttpPut httpput = new HttpPut(INDEX_URL + "/" + this.indexName + "/" + "cluster" + "/" + c.getId());
         return this.requestWithEntity(httpput, json.toString());		
 	}
-	
-	public JsonArray getAllClusters() throws ClientProtocolException, IOException {
-        HttpGet httpget = new HttpGet(INDEX_URL + "/" + this.indexName + "/cluster/" + "_search?q=*");
-		CloseableHttpClient httpclient = HttpClients.createDefault();
-        CloseableHttpResponse response = httpclient.execute(httpget);
-        String res = new BasicResponseHandler().handleResponse(response);
-        httpclient.close();
-        JsonObject json = new JsonParser().parse(res).getAsJsonObject();
-        JsonArray hits = json.get("hits").getAsJsonObject().get("hits").getAsJsonArray();
-        JsonArray clustersJson = new JsonArray();
-        for(int i=0; i<hits.size(); i++) {
-        	clustersJson.add(hits.get(i).getAsJsonObject().get("_source"));
-        }
-        return clustersJson;
-	}
-	
+
 	public void updateArticleCluster(int articleId, Cluster c) throws ClientProtocolException, IOException {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId + "/_update");
         String s = "{\"doc\" : {\"cluster_id\" : " + c.getId() + "}}";
         this.requestWithEntity(httppost, s);		
 	}
-	
-	public String basicSearch(String query) throws ClientProtocolException, IOException {
-        HttpGet httpget = new HttpGet(INDEX_URL + "/" + this.indexName + "/article/" + "_search?q=" + query);
-		CloseableHttpClient httpclient = HttpClients.createDefault();
-        CloseableHttpResponse response = httpclient.execute(httpget);
-        String responseString = new BasicResponseHandler().handleResponse(response);
-        httpclient.close();
-        return responseString;
-	}
-	
-	public JsonObject pageRankedSearch(String query) throws ClientProtocolException, IOException {
-        HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/article/" + "_search");
 
-        /**
-         * Trying to generate this:
-         * {
-			"query" : {
-				"function_score": {
-					"query" : {"match" : {"abstraction" : "article abstraction"}},
-					"functions" : [
-						{"script_score" : {"script" : "_score * Float.parseFloat(doc['page_rank'].value)"}}
-					]
-				}
-				}
-			}
-         */
-        JsonObject script = new JsonObject();
-		script.addProperty("script", "_score +  Float.parseFloat(doc['page_rank'].value)");
-		JsonObject scriptScore = new JsonObject();
-		scriptScore.add("script_score", script);
-		JsonArray functions = new JsonArray();
-		functions.add(scriptScore);
-		JsonObject field = new JsonObject();
-		field.addProperty("abstraction", query);
-		JsonObject queryJson = new JsonObject();
-		queryJson.add("match", field);
-		JsonObject functionScoreBody = new JsonObject();
-//		functionScoreBody.addProperty("query", "\"bool\": {\"should\": [{\"match\": {\"title\":\"" + query + "\"}},{\"match\": {\"abstraction\":\"" + query + "\"}}]}");
-		functionScoreBody.add("query", queryJson);
-		functionScoreBody.add("functions", functions);
-		JsonObject functionScore = new JsonObject();
-		functionScore.add("function_score", functionScoreBody);
-		JsonObject wholeQuery = new JsonObject();
-		wholeQuery.add("query", functionScore);
-        
-//		System.err.println(wholeQuery.toString());
-        String res = this.requestWithEntity(httppost, wholeQuery.toString());
-//        System.err.println(res);
-        JsonObject json = new JsonParser().parse(res).getAsJsonObject();
-//        System.err.println(json.get("hits").getAsJsonObject().get("hits").getAsJsonArray().get(0).toString());
-        return json.get("hits").getAsJsonObject();
-	}
-	
-	public JsonArray filterResultsByCluster(JsonObject initialResult, int clusterId) {
-		JsonArray hitsArray = initialResult.get("hits").getAsJsonArray();
-		JsonArray result = new JsonArray();
-		for(int i=0; i<hitsArray.size(); i++) {
-			JsonObject hit = hitsArray.get(i).getAsJsonObject();
-			int id = Integer.parseInt(hit.get("_source").getAsJsonObject().get("cluster_id").toString());
-			if(id == clusterId)
-				result.add(hit);
-		}
-		return result;
-	}
-	
-	public String indexSearchScript() throws ClientProtocolException, IOException {
-		String pageRankScriptId = "pageRank_script";
-        HttpPost httppost = new HttpPost(INDEX_URL + "/_scripts/mustache/" + pageRankScriptId);
-        String script = "{\"script\" : \"_score * doc['page_rank'].value \"}";
-        return requestWithEntity(httppost, script);
-	}
-	
 	public String requestWithEntity(HttpEntityEnclosingRequestBase httpRequest, String requestBody) throws ClientProtocolException, IOException {
 		StringEntity entity = new StringEntity(requestBody);
 		httpRequest.setEntity(entity);
@@ -350,7 +161,7 @@ public class Indexer {
             httpclient.close();
             return responseString;
         } catch (Exception e) {
-        	
+        	e.printStackTrace();
         }
         return null;
 	}
