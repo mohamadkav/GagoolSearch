@@ -14,17 +14,14 @@ import java.util.*;
  */
 public class Core {
     private JsonArray articlesJsonArray;
-    private boolean[][] linkGraph;
-    private static final int REQUIRED_DOC_COUNT = 1000;
+    public static final int REQUIRED_DOC_COUNT = 20;
     private static final String DOCS_JSON_DIR = "docs";
     private static final String JSON_FORMAT = ".json";
-    private static final String LINKS_MATRIX_FILE = "links.matrix";
-    private static final String BASE_URL = "https://fa.wikipedia.org/";
     private static final String FIRST_LINK = "https://fa.wikipedia.org/wiki/%D8%B3%D8%B9%D8%AF%DB%8C";
     private static final ArrayList<String> FIRST_DOCS= new ArrayList<String>(){{add(FIRST_LINK);}};
     private static final Random random = new Random();
 
-    private int nextDocId=0;
+    private int nextDocId=-1;
     private HashMap<String, Article> articles = new HashMap<>();
     public Core() {
         initializeJson();
@@ -33,10 +30,12 @@ public class Core {
     public void execute(){
         for(String url:FIRST_DOCS)
             doURL(url);
+        System.out.println("Finished parsing initial docs");
         while(articles.size()<REQUIRED_DOC_COUNT){
             List<String> keysAsArray = new ArrayList<>(articles.keySet());
             Article article=articles.get(keysAsArray.get(random.nextInt(articles.size())));
             doURL(article.getReferredURLs().get(random.nextInt(article.getReferredURLs().size())));
+            System.out.println(articles.size()+"%");
         }
     }
 
@@ -44,7 +43,7 @@ public class Core {
         try {
             if(articles.containsKey(url))
                 return;
-            Document document = Jsoup.connect(url).get();
+            Document document = Jsoup.connect(url).timeout(10000).get();
             String abs=Parser.getAbstractFromDoc(document);
             int docId=++nextDocId;
             String title=Parser.getTitleFromDoc(document);
@@ -64,7 +63,6 @@ public class Core {
     }
     private void initializeJson() {
         articlesJsonArray = new JsonArray();
-        linkGraph = new boolean[REQUIRED_DOC_COUNT + 1][REQUIRED_DOC_COUNT + 1];
         File dir = new File(DOCS_JSON_DIR);
         if (!dir.exists()) {
             boolean successful = dir.mkdir();
@@ -81,7 +79,7 @@ public class Core {
         try (FileWriter file = new FileWriter(DOCS_JSON_DIR + "/" + article.getId() + JSON_FORMAT)) {
             file.write(article.getJsonObject().toString());
         } catch (Exception e) {
-            makeJson(article);
+            e.printStackTrace();
         }
     }
 

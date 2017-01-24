@@ -20,8 +20,8 @@ public class Parser {
                 element.remove();
             Elements paragraphs = doc.select(".mw-body-content p");
             for(Element paragraph : paragraphs){
-                String text= Parser.arabicToDecimal(paragraph.text()).replaceAll("\\d","");
-                if(text.length()>50)
+                String text= Parser.arabicToDecimal(paragraph.text()).replaceAll("\\d","").replaceAll("\\[", "").replaceAll("\\]","").replaceAll("/","").replaceAll("\"","");
+                if(text.replaceAll(" ","").length()>50)
                     return text;
             }
             return paragraphs.first().text();

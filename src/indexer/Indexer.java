@@ -13,7 +13,6 @@ import models.Article;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
@@ -35,7 +34,7 @@ public class Indexer {
 
 	private static final String INDEX_URL = "http://localhost:9200";
 	private static final String FILES_PATH = System.getProperty("user.dir");
-	private static final int N = 1000;
+	private static final int N = 20;
 
 	private String indexName;
 	private PageRank pageRank;
@@ -46,13 +45,13 @@ public class Indexer {
 	}
 
 	/** UI Methods **/
-	public void indexify() throws ClientProtocolException, IOException {
+	public void indexify() throws IOException {
 		this.addAllArticles();
 	}
 
-	public void cluster(int k) throws ClientProtocolException, IOException {
+	public void cluster(int k) throws IOException {
 		List<TermVector> vectors = new ArrayList<TermVector>();
-		for(int i=1; i<=1000; i++) {
+		for(int i=1; i<=N; i++) {
 			try {
 				TermVector v = this.getTermVector(i);
 				if(v == null)
@@ -81,19 +80,11 @@ public class Indexer {
 
 
 		
-	public void addAllArticles() throws ClientProtocolException, IOException {
-//		JsonArray articles = core.getArticleJsons().get("articles").getAsJsonArray();
-//		FileReader file = new FileReader("articles" + Core.JSON_FORMAT);
-//		String s = "";
-//		Scanner scanner = new Scanner(FIlES_PATH + "/articles." + Core.JSON_FORMAT);
-//		while(scanner.hasNextLine()) {
-//			s += scanner.nextLine();
-//		}
-//		scanner.close();
-		for(int i=1; i<=1000; i++) {
+	private void addAllArticles() throws IOException {
+		for(int i=1; i<N; i++) {
 //			System.err.println(i);
 			String s = "";
-			Scanner scanner = new Scanner(new File(FILES_PATH + "\\docs\\" + i + ".json"));
+			Scanner scanner = new Scanner(new File(FILES_PATH + "/docs/" + i + ".json"));
 			while(scanner.hasNextLine()) {
 				s += scanner.nextLine();
 			}
@@ -112,14 +103,14 @@ public class Indexer {
 		}
 	}
 	
-	public String addArticle(JsonObject articleJson) throws IOException {
+	private String addArticle(JsonObject articleJson) throws IOException {
 		int articleId = articleJson.get(Article.ID_KEY).getAsInt();
 		String articleString = articleJson.toString();
         HttpPut httpput = new HttpPut(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId);
         return this.requestWithEntity(httpput, articleString);
 	}
 	
-	public void assignPageRanks(double alpha) throws FileNotFoundException {
+	private void assignPageRanks(double alpha) throws FileNotFoundException {
 //		pageRank.consAdjMatFromFile();
 		pageRank.computePageRanks(alpha);
 		for(int i=0; i<N; i++) {
@@ -131,13 +122,13 @@ public class Indexer {
 		}
 	}
 
-	public void updateArticlePageRank(int articleId, double pageRank) throws IOException {
+	private void updateArticlePageRank(int articleId, double pageRank) throws IOException {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId + "/_update");
         String s = "{\"doc\" : {\"page_rank\" : " + pageRank + "}}";
         this.requestWithEntity(httppost, s);
 	}
 	
-	public String addClusterToIndex(Cluster c) throws ClientProtocolException, IOException {
+	private String addClusterToIndex(Cluster c) throws ClientProtocolException, IOException {
 		JsonObject json = new JsonObject();
 		json.addProperty("cluster_id", c.getId());
 		json.addProperty("cluster_title", c.getTitle());
@@ -145,13 +136,13 @@ public class Indexer {
         return this.requestWithEntity(httpput, json.toString());		
 	}
 
-	public void updateArticleCluster(int articleId, Cluster c) throws ClientProtocolException, IOException {
+	private void updateArticleCluster(int articleId, Cluster c) throws ClientProtocolException, IOException {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId + "/_update");
         String s = "{\"doc\" : {\"cluster_id\" : " + c.getId() + "}}";
         this.requestWithEntity(httppost, s);		
 	}
 
-	public String requestWithEntity(HttpEntityEnclosingRequestBase httpRequest, String requestBody) throws ClientProtocolException, IOException {
+	private String requestWithEntity(HttpEntityEnclosingRequestBase httpRequest, String requestBody) throws IOException {
 		StringEntity entity = new StringEntity(requestBody);
 		httpRequest.setEntity(entity);
 		CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -166,7 +157,7 @@ public class Indexer {
         return null;
 	}
 	
-	public TermVector getTermVector(int id) throws ClientProtocolException, IOException {
+	private TermVector getTermVector(int id) throws ClientProtocolException, IOException {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article/" + id + "/_termvectors");	
         JsonArray fields = new JsonArray();
         fields.add(new JsonPrimitive("abstraction"));

@@ -1,3 +1,5 @@
+import indexer.Indexer;
+import indexer.PageRank;
 import newcrawler.Parser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -6,6 +8,7 @@ import org.jsoup.select.Elements;
 import ui.HomePageFrame;
 
 import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 /**
  * Created by saeed on 12/29/2015.
@@ -15,9 +18,9 @@ public class Main {
      //   new HomePageFrame();
         new Core();
     }*/
-
-
     public static void main(String[] args) throws Exception{
         new newcrawler.Core().execute();
+        new Indexer().indexify();
+        new Indexer().pageRank(0.5);
     }
 }

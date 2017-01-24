@@ -1,6 +1,7 @@
 package models;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
@@ -66,6 +67,8 @@ public class Article {
         jsonObject.addProperty(Article.TITLE_KEY, title);
         jsonObject.addProperty(Article.URL_KEY, url);
         jsonObject.addProperty(Article.ABSTRACTION_KEY, abstraction);
+        JsonElement jsonElement = new Gson().toJsonTree(referredURLs);
+        jsonObject.add(Article.REF_KEY, jsonElement);
         return jsonObject;
     }
 

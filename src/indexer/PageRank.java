@@ -1,53 +1,37 @@
 package indexer;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.Scanner;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import newcrawler.Core;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 
 public class PageRank {
 
 	private static final String FILES_PATH = System.getProperty("user.dir");
-	private static final int N = 1000;
+	private static final int N = Core.REQUIRED_DOC_COUNT;
 	private static double ALPHA = 0.2;
 	private static final double PRECISION = 0.01;
 	private int[][] adjMat;
 	private double[][] pMat;
 	private double[] pageRank;
-
-	public static void main(String[] args) throws Exception {
-		PageRank pr = new PageRank();
-		pr.consAdjMatFromFile();
-		String s = "";
-		int c = 0;
-		for(int i=0; i<N; i++) {
-			for(int j=0; j<N; j++) {
-				if(pr.adjMat[i][j] == 1)
-					c++;
-			}
-		}
-		System.err.println("Count of 1 entries: " + c);
-		pr.computeProbabilityMatrix();
-		pr.computePageRanksByHand();
-		for(int i=0; i<N; i++)
-			s += pr.pageRank[i] + " " ;
-		System.err.println(s);
-//		int[][] a = {{0, 1, 0}, {1, 0, 1}, {0, 1, 0}};
-//		pr.setAdjacencyMatrix(a);
-//		pr.computeProbabilityMatrix();
-//		for(int i=0; i<N; i++) {
-//			String s = "";
-//			for(int j=0; j<N; j++)
-//				s += pr.pMat[i][j] + " " ;
-//			System.out.println(s);
-//		}
-//		pr.computePageRanks();
-	}
 
 	public PageRank() {
 		adjMat = new int[N][N];
@@ -61,18 +45,43 @@ public class PageRank {
 
 	public void computePageRanks(double alpha) throws FileNotFoundException {
 		ALPHA = alpha;
-//		this.setImaginaryPageRanks();
-		this.consAdjMatFromFile();
+	//this.consAdjMatFromFile();
+        this.consAdjMatFromElastic();
 		this.computeProbabilityMatrix();
 		this.computePageRanksByHand();
 	}
-	
-	public void setAdjacencyMatrix(int[][] m) {
-		this.adjMat = m;
-	}
 
-	public void consAdjMatFromFile() throws FileNotFoundException {
-		String s = "";
+	private static final String ALL_DOCS_URL = "http://localhost:9200/gagool/_search?size="+N+"&pretty=true&q=*:*";
+	private static final HttpClient client = HttpClientBuilder.create().build();
+	private static final JsonParser jsonParser = new JsonParser();
+	private void consAdjMatFromElastic() throws FileNotFoundException {
+		try {
+			HttpGet request = new HttpGet(ALL_DOCS_URL);
+			request.addHeader("User-Agent", "Mozilla/5.0");
+			HttpResponse response = client.execute(request);
+			String json = EntityUtils.toString(response.getEntity(), "UTF-8");
+			JsonArray jsonArray=jsonParser.parse(json).getAsJsonObject().getAsJsonObject("hits").getAsJsonArray("hits");
+			HashMap<String,Integer> docToIdMapping=new HashMap<>();
+			for(JsonElement docJsonElement:jsonArray){
+				JsonObject docJsonObject=((JsonObject)docJsonElement).getAsJsonObject("_source");
+				docToIdMapping.put(docJsonObject.get("url").getAsString(),docJsonObject.get("id").getAsInt());
+			}
+			if(docToIdMapping.size()!=jsonArray.size())
+				throw new RuntimeException("Haven't I fucked myself enough??!");
+            for(JsonElement docJsonElement:jsonArray){
+                int currDocId=((JsonObject)docJsonElement).getAsJsonObject("_source").get("id").getAsInt();
+                JsonArray refURLArray=((JsonObject)docJsonElement).getAsJsonObject("_source").getAsJsonArray("referredURLs");
+                for(JsonElement refURL:refURLArray){
+                    String url=refURL.getAsString();
+                    if(docToIdMapping.containsKey(url))
+                        adjMat[currDocId][docToIdMapping.get(url)]=1;
+                }
+            }
+            printMatrix(adjMat);
+		}catch (Exception e){
+			throw new RuntimeException(e);
+		}
+/*		String s = "";
 		Scanner scanner = new Scanner(new File(FILES_PATH + "\\links.matrix"));
 		while(scanner.hasNextLine()) {
 			s += scanner.nextLine();
@@ -89,8 +98,16 @@ public class PageRank {
 				else
 					adjMat[i][j] = 0;
 			}
-		}
+		}*/
 	}
+
+    private static void printMatrix(int[][] grid) {
+        for(int r=0; r<grid.length; r++) {
+            for(int c=0; c<grid[r].length; c++)
+                System.out.print(grid[r][c] + " ");
+            System.out.println();
+        }
+    }
 
 	public void computeProbabilityMatrix() {
 		for(int i=0; i<N; i++) {
