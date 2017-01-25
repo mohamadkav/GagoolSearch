@@ -81,7 +81,7 @@ public class Indexer {
 
 		
 	private void addAllArticles() throws IOException {
-		for(int i=1; i<N; i++) {
+		for(int i=1; i<=N; i++) {
 //			System.err.println(i);
 			String s = "";
 			Scanner scanner = new Scanner(new File(FILES_PATH + "/docs/" + i + ".json"));
@@ -115,7 +115,7 @@ public class Indexer {
 		pageRank.computePageRanks(alpha);
 		for(int i=0; i<N; i++) {
 			try {
-				updateArticlePageRank(i, pageRank.getPageRank(i));
+				updateArticlePageRank(i+1, pageRank.getPageRank(i));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -152,7 +152,7 @@ public class Indexer {
             httpclient.close();
             return responseString;
         } catch (Exception e) {
-        	e.printStackTrace();
+			e.printStackTrace();
         }
         return null;
 	}

@@ -74,11 +74,12 @@ public class PageRank {
                 for(JsonElement refURL:refURLArray){
                     String url=refURL.getAsString();
                     if(docToIdMapping.containsKey(url))
-                        adjMat[currDocId][docToIdMapping.get(url)]=1;
+                        adjMat[currDocId-1][docToIdMapping.get(url)-1]=1;
                 }
             }
             printMatrix(adjMat);
 		}catch (Exception e){
+			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 /*		String s = "";

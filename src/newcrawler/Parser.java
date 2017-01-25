@@ -20,7 +20,8 @@ public class Parser {
                 element.remove();
             Elements paragraphs = doc.select(".mw-body-content p");
             for(Element paragraph : paragraphs){
-                String text= Parser.arabicToDecimal(paragraph.text()).replaceAll("\\d","").replaceAll("\\[", "").replaceAll("\\]","").replaceAll("/","").replaceAll("\"","");
+                String text= Parser.arabicToDecimal(paragraph.text()).replaceAll("\\d","");//.replaceAll("\\[", "").replaceAll("\\]","").replaceAll("/","").replaceAll("\"","");
+                text=removeSpecialChars(text);
                 if(text.replaceAll(" ","").length()>50)
                     return text;
             }
@@ -28,6 +29,14 @@ public class Parser {
         }
         else throw new NullPointerException();
 
+    }
+    private static String removeSpecialChars(String rawInput){
+        StringBuilder stringBuilder=new StringBuilder();
+        for(char c:rawInput.toCharArray()){
+            if(c=='\u200c' || c==' '|| ((int)c>Integer.valueOf("0620",16)&&(int)c<Integer.valueOf("064A",16)) ||  ((int)c>Integer.valueOf("066E",16)&&(int)c<Integer.valueOf("06D2",16)) )
+                stringBuilder.append(c);
+        }
+        return stringBuilder.toString();
     }
 
     public static String getTitleFromDoc(Document doc){

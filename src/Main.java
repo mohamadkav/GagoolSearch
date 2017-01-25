@@ -21,6 +21,7 @@ public class Main {
     public static void main(String[] args) throws Exception{
         new newcrawler.Core().execute();
         new Indexer().indexify();
+        Thread.sleep(2000);
         new Indexer().pageRank(0.5);
     }
 }

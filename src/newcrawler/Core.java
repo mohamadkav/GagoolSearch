@@ -21,7 +21,7 @@ public class Core {
     private static final ArrayList<String> FIRST_DOCS= new ArrayList<String>(){{add(FIRST_LINK);}};
     private static final Random random = new Random();
 
-    private int nextDocId=-1;
+    private int nextDocId=0;
     private HashMap<String, Article> articles = new HashMap<>();
     public Core() {
         initializeJson();
@@ -31,11 +31,11 @@ public class Core {
         for(String url:FIRST_DOCS)
             doURL(url);
         System.out.println("Finished parsing initial docs");
-        while(articles.size()<REQUIRED_DOC_COUNT){
+        while(articles.size()<=REQUIRED_DOC_COUNT){
             List<String> keysAsArray = new ArrayList<>(articles.keySet());
             Article article=articles.get(keysAsArray.get(random.nextInt(articles.size())));
             doURL(article.getReferredURLs().get(random.nextInt(article.getReferredURLs().size())));
-            System.out.println(articles.size()+"%");
+            System.out.println((articles.size()*100)/REQUIRED_DOC_COUNT+"%");
         }
     }
 
@@ -52,11 +52,6 @@ public class Core {
             makeJson(article);
             addToJson(article);
             articles.put(url,article);
-/*                System.out.println("ABS: "+abs);
-                System.out.println("ID: "+docId);
-                System.out.println("TITLE: "+title);
-                for(String out:outLinks)
-                    System.out.println(out);*/
         }catch (Exception e){
             e.printStackTrace();
         }
