@@ -29,6 +29,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import org.apache.http.protocol.HTTP;
 
 public class Indexer {
 
@@ -128,7 +129,7 @@ public class Indexer {
         this.requestWithEntity(httppost, s);
 	}
 	
-	private String addClusterToIndex(Cluster c) throws ClientProtocolException, IOException {
+	private String addClusterToIndex(Cluster c) throws IOException {
 		JsonObject json = new JsonObject();
 		json.addProperty("cluster_id", c.getId());
 		json.addProperty("cluster_title", c.getTitle());
@@ -136,14 +137,14 @@ public class Indexer {
         return this.requestWithEntity(httpput, json.toString());		
 	}
 
-	private void updateArticleCluster(int articleId, Cluster c) throws ClientProtocolException, IOException {
+	private void updateArticleCluster(int articleId, Cluster c) throws IOException {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article" + "/" + articleId + "/_update");
         String s = "{\"doc\" : {\"cluster_id\" : " + c.getId() + "}}";
         this.requestWithEntity(httppost, s);		
 	}
 
 	private String requestWithEntity(HttpEntityEnclosingRequestBase httpRequest, String requestBody) throws IOException {
-		StringEntity entity = new StringEntity(requestBody);
+		StringEntity entity = new StringEntity(requestBody, "UTF-8");
 		httpRequest.setEntity(entity);
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         CloseableHttpResponse response = httpclient.execute(httpRequest);
@@ -156,8 +157,8 @@ public class Indexer {
         }
         return null;
 	}
-	
-	private TermVector getTermVector(int id) throws ClientProtocolException, IOException {
+
+	private TermVector getTermVector(int id) throws IOException {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article/" + id + "/_termvectors");	
         JsonArray fields = new JsonArray();
         fields.add(new JsonPrimitive("abstraction"));

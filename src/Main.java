@@ -22,6 +22,8 @@ public class Main {
         new newcrawler.Core().execute();
         new Indexer().indexify();
         Thread.sleep(2000);
-        new Indexer().pageRank(0.5);
+        Indexer indexer=new Indexer();
+        indexer.pageRank(0.5);
+        indexer.cluster(5);
     }
 }
