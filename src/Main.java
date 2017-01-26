@@ -19,11 +19,18 @@ public class Main {
         new Core();
     }*/
     public static void main(String[] args) throws Exception{
-        new newcrawler.Core().execute();
-        new Indexer().indexify();
-        Thread.sleep(2000);
+  //      new newcrawler.Core().execute();
+  //      new Indexer().indexify();
+ //       Thread.sleep(2000);
         Indexer indexer=new Indexer();
-        indexer.pageRank(0.5);
-        indexer.cluster(5);
+ //       indexer.pageRank(0.5);
+   //     System.out.println(indexer.pageRankedSearch("سعدی",null).toString());
+
+
+//        indexer.cluster(5);
+        Thread.sleep(2000);
+
+        System.out.println(indexer.filterResultsByCluster(indexer.pageRankedSearch("سعدی",null),2));
+
     }
 }

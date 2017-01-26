@@ -11,10 +11,7 @@ import java.util.Scanner;
 import models.Article;
 
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -187,4 +184,53 @@ public class Indexer {
         v.normalize();
         return v;
 	}
+
+    public JsonArray filterResultsByCluster(JsonObject initialResult, int clusterId) {
+        JsonArray hitsArray = initialResult.get("hits").getAsJsonArray();
+        JsonArray result = new JsonArray();
+        for(int i=0; i<hitsArray.size(); i++) {
+            JsonObject hit = hitsArray.get(i).getAsJsonObject();
+            int id = Integer.parseInt(hit.get("_source").getAsJsonObject().get("cluster_id").toString());
+            if(id == clusterId)
+                result.add(hit);
+        }
+        return result;
+    }
+
+	public JsonObject pageRankedSearch(String absQuery,String titleQuery) throws IOException {
+		HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/article/" + "_search");
+		JsonObject script = new JsonObject();
+		script.addProperty("script", "_score +  doc['page_rank'].value");
+		JsonObject scriptScore = new JsonObject();
+		scriptScore.add("script_score", script);
+		JsonArray functions = new JsonArray();
+		functions.add(scriptScore);
+		JsonObject field = new JsonObject();
+		if(absQuery!=null&&!absQuery.isEmpty())
+		    field.addProperty("abstraction", absQuery);
+        if(titleQuery!=null&&!titleQuery.isEmpty())
+            field.addProperty("title", titleQuery);
+		JsonObject queryJson = new JsonObject();
+		queryJson.add("match", field);
+		JsonObject functionScoreBody = new JsonObject();
+//		functionScoreBody.addProperty("query", "\"bool\": {\"should\": [{\"match\": {\"title\":\"" + query + "\"}},{\"match\": {\"abstraction\":\"" + query + "\"}}]}");
+		functionScoreBody.add("query", queryJson);
+		functionScoreBody.add("functions", functions);
+		JsonObject functionScore = new JsonObject();
+		functionScore.add("function_score", functionScoreBody);
+		JsonObject wholeQuery = new JsonObject();
+		wholeQuery.add("query", functionScore);
+        String res = this.requestWithEntity(httppost, wholeQuery.toString());
+		JsonObject json = new JsonParser().parse(res).getAsJsonObject();
+		return json.get("hits").getAsJsonObject();
+	}
+
+    public String basicSearch(String query) throws IOException {
+        HttpGet httpget = new HttpGet(INDEX_URL + "/" + this.indexName + "/article/" + "_search?q=" + query);
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        CloseableHttpResponse response = httpclient.execute(httpget);
+        String responseString = new BasicResponseHandler().handleResponse(response);
+        httpclient.close();
+        return responseString;
+    }
 }
