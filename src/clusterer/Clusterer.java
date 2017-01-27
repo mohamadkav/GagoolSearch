@@ -13,8 +13,9 @@ public class Clusterer {
 	private List<TermVector> vectors;
 	public Set<Cluster> clusters;
 	private double RSS;
+	private static final Random rand = new Random();
 
-//	private Map<String, Integer> allClustersTerms;
+	//	private Map<String, Integer> allClustersTerms;
 	private Set<String> allTerms;
 	
 	public Clusterer(List<TermVector> vectors) {
@@ -81,7 +82,6 @@ public class Clusterer {
 	
 	private void initializeClusters(Set<Cluster> clusters, int k) {
 		List<Integer> initCents = new ArrayList<Integer>();
-		Random rand = new Random();
 		for(int i=0; i<k; i++) {
 			int next;
 			do {
@@ -109,7 +109,7 @@ public class Clusterer {
 		return rss;
 	}
 
-	public void aggregateAllTerms() {
+	private void aggregateAllTerms() {
 		allTerms = new HashSet<String>();
 		for(TermVector v : vectors) {
 			for(String term : v.getTerms().keySet())

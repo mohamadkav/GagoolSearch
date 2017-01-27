@@ -30,6 +30,26 @@ public class Parser {
         else throw new NullPointerException();
 
     }
+
+    public static String getAllTextFromDoc(Document doc){
+        Elements spanWithId = doc.select("table#noarticletext");
+        StringBuilder stringBuilder=new StringBuilder();
+        if (spanWithId.size() == 0) {
+            for (Element element : doc.select("table"))
+                element.remove();
+            Elements paragraphs = doc.select(".mw-body-content p");
+            for(Element paragraph : paragraphs){
+                String text= Parser.arabicToDecimal(paragraph.text()).replaceAll("\\d","");//.replaceAll("\\[", "").replaceAll("\\]","").replaceAll("/","").replaceAll("\"","");
+                text=removeSpecialChars(text);
+                stringBuilder.append(text+" ");
+            }
+            return stringBuilder.toString();
+        }
+        else throw new NullPointerException();
+
+    }
+
+
     private static String removeSpecialChars(String rawInput){
         StringBuilder stringBuilder=new StringBuilder();
         for(char c:rawInput.toCharArray()){

@@ -21,7 +21,7 @@ public class Main {
         indexer.cluster(5);
         Thread.sleep(2000);
 
-        System.out.println(indexer.filterResultsByCluster(indexer.pageRankedSearch("سعدی",null),2));
+        System.out.println(indexer.filterResultsByCluster(indexer.pageRankedSearch("سعدی",null,null),2));
 
     }
 }

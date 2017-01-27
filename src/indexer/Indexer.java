@@ -159,7 +159,7 @@ public class Indexer {
         HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/" + "article/" + id + "/_termvectors");	
         JsonArray fields = new JsonArray();
         fields.add(new JsonPrimitive("abstraction"));
-        fields.add(new JsonPrimitive("title"));
+		fields.add(new JsonPrimitive("title"));
         JsonObject body = new JsonObject();
         body.add("fields", fields);
         body.addProperty("term_statistics", true);
@@ -197,7 +197,7 @@ public class Indexer {
         return result;
     }
 
-	public JsonObject pageRankedSearch(String absQuery,String titleQuery) throws IOException {
+	public JsonObject pageRankedSearch(String absQuery,String titleQuery,String allTextQuery) throws IOException {
 		HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/article/" + "_search");
 		JsonObject script = new JsonObject();
 		script.addProperty("script", "_score +  doc['page_rank'].value");
@@ -210,6 +210,8 @@ public class Indexer {
 		    field.addProperty("abstraction", absQuery);
         if(titleQuery!=null&&!titleQuery.isEmpty())
             field.addProperty("title", titleQuery);
+        if(allTextQuery!=null&&!allTextQuery.isEmpty())
+            field.addProperty("allText", allTextQuery);
 		JsonObject queryJson = new JsonObject();
 		queryJson.add("match", field);
 		JsonObject functionScoreBody = new JsonObject();

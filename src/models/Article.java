@@ -12,24 +12,28 @@ import java.util.List;
  */
 public class Article {
     public static String ID_KEY = "id";
-    public static String TITLE_KEY = "title";
-    public static String URL_KEY = "url";
-    public static String ABSTRACTION_KEY = "abstraction";
-    public static String REF_KEY = "referredURLs";
+    private static String TITLE_KEY = "title";
+    private static String URL_KEY = "url";
+    private static String ABSTRACTION_KEY = "abstraction";
+    private static String REF_KEY = "referredURLs";
+    private static String TEXT_KEY = "allText";
+
 
 
     private int id;
     private String title;
     private String url;
     private String abstraction;
+    private String allText;
     private List<String> referredURLs;
 
-    public Article(String title, String url, int id, String abstraction,List<String>referredURLs) {
+    public Article(String title, String url, int id, String abstraction,String allText,List<String>referredURLs) {
         this.title = title;
         this.url = url;
         this.id = id;
         this.abstraction = abstraction;
         this.referredURLs=referredURLs;
+        this.allText=allText;
     }
 
     @Override
@@ -61,12 +65,21 @@ public class Article {
         this.referredURLs = referredURLs;
     }
 
+    public String getAllText() {
+        return allText;
+    }
+
+    public void setAllText(String allText) {
+        this.allText = allText;
+    }
+
     public JsonObject getJsonObject() {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty(Article.ID_KEY, id);
         jsonObject.addProperty(Article.TITLE_KEY, title);
         jsonObject.addProperty(Article.URL_KEY, url);
         jsonObject.addProperty(Article.ABSTRACTION_KEY, abstraction);
+        jsonObject.addProperty(Article.TEXT_KEY,allText);
         JsonElement jsonElement = new Gson().toJsonTree(referredURLs);
         jsonObject.add(Article.REF_KEY, jsonElement);
         return jsonObject;
