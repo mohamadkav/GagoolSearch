@@ -4,12 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by saeed on 12/29/2015.
- */
+
 public class Article {
     public static String ID_KEY = "id";
     public static String TITLE_KEY = "title";

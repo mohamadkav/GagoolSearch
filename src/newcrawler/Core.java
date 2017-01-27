@@ -1,34 +1,36 @@
 package newcrawler;
 
-import com.google.gson.JsonArray;
 import models.Article;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Created by mohammad on 1/23/17.
  */
 public class Core {
-    public static final int REQUIRED_DOC_COUNT = 100;
+    public static final int REQUIRED_DOC_COUNT = 1000;
     private static final int OUT_DEGREE=5;
 
 
 
     private static final String DOCS_JSON_DIR = "docs";
     private static final String JSON_FORMAT = ".json";
-    private static final String FIRST_LINK = "https://fa.wikipedia.org/wiki/%D8%B3%D8%B9%D8%AF%DB%8C";
-    private static final ArrayList<String> FIRST_DOCS= new ArrayList<String>(){{add(FIRST_LINK);}};
+    private List<String> FIRST_DOCS;
     private static final Random random = new Random();
 
     private int nextDocId=0;
     private HashMap<String, Article> articles = new HashMap<>();
     private HashMap<String,Integer> outDegree=new HashMap<>();
-    public Core() {
+    public Core(List<String>firstDocs) {
         initializeJson();
+        this.FIRST_DOCS=firstDocs;
     }
 
     public void execute(){
@@ -75,7 +77,11 @@ public class Core {
             makeJson(article);
             articles.put(url,article);
             return true;
-        }catch (Exception e){
+        }catch (NullPointerException e) {
+            System.err.println("Failed for doc! skipping...");
+            return false;
+        }
+        catch (Exception e){
             e.printStackTrace();
             return false;
         }

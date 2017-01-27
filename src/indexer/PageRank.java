@@ -1,8 +1,5 @@
 package indexer;
 
-import java.io.FileNotFoundException;
-import java.util.HashMap;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -13,6 +10,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+
+import java.io.FileNotFoundException;
+import java.util.HashMap;
 
 public class PageRank {
 
