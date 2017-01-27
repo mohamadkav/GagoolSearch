@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class Core {
     private JsonArray articlesJsonArray;
-    public static final int REQUIRED_DOC_COUNT = 20;
+    public static final int REQUIRED_DOC_COUNT = 1000;
     private static final String DOCS_JSON_DIR = "docs";
     private static final String JSON_FORMAT = ".json";
     private static final String FIRST_LINK = "https://fa.wikipedia.org/wiki/%D8%B3%D8%B9%D8%AF%DB%8C";
@@ -69,6 +69,7 @@ public class Core {
             }
         }
     }
+
 
     private void makeJson(Article article) {
         try (FileWriter file = new FileWriter(DOCS_JSON_DIR + "/" + article.getId() + JSON_FORMAT)) {
