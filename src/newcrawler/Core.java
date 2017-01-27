@@ -35,7 +35,7 @@ public class Core {
         for(String url:FIRST_DOCS)
             doURL(url);
         System.out.println("Finished parsing initial docs");
-        while(articles.size()<=REQUIRED_DOC_COUNT){
+        while(articles.size()<REQUIRED_DOC_COUNT){
             List<String> keysAsArray = new ArrayList<>(articles.keySet());
             String url=keysAsArray.get(random.nextInt(articles.size()));
             Article article=articles.get(url);

@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import com.google.gson.*;
 import models.Article;
 
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
@@ -21,11 +21,6 @@ import clusterer.Cluster;
 import clusterer.Clusterer;
 import clusterer.TermVector;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import org.apache.http.protocol.HTTP;
 
 public class Indexer {
@@ -197,7 +192,7 @@ public class Indexer {
         return result;
     }
 
-	public JsonObject pageRankedSearch(String absQuery,String titleQuery,String allTextQuery) throws IOException {
+	public JsonObject pageRankedSearch(String query) throws IOException {
 		HttpPost httppost = new HttpPost(INDEX_URL + "/" + this.indexName + "/article/" + "_search");
 		JsonObject script = new JsonObject();
 		script.addProperty("script", "_score +  doc['page_rank'].value");
@@ -206,14 +201,10 @@ public class Indexer {
 		JsonArray functions = new JsonArray();
 		functions.add(scriptScore);
 		JsonObject field = new JsonObject();
-		if(absQuery!=null&&!absQuery.isEmpty())
-		    field.addProperty("abstraction", absQuery);
-        if(titleQuery!=null&&!titleQuery.isEmpty())
-            field.addProperty("title", titleQuery);
-        if(allTextQuery!=null&&!allTextQuery.isEmpty())
-            field.addProperty("allText", allTextQuery);
+		field.addProperty("query", query);
+		field.add("fields",new JsonParser().parse("[\"title^5\",\"abstraction^3\",\"allText\"]"));
 		JsonObject queryJson = new JsonObject();
-		queryJson.add("match", field);
+		queryJson.add("multi_match", field);
 		JsonObject functionScoreBody = new JsonObject();
 //		functionScoreBody.addProperty("query", "\"bool\": {\"should\": [{\"match\": {\"title\":\"" + query + "\"}},{\"match\": {\"abstraction\":\"" + query + "\"}}]}");
 		functionScoreBody.add("query", queryJson);
@@ -222,7 +213,7 @@ public class Indexer {
 		functionScore.add("function_score", functionScoreBody);
 		JsonObject wholeQuery = new JsonObject();
 		wholeQuery.add("query", functionScore);
-        String res = this.requestWithEntity(httppost, wholeQuery.toString());
+		String res = this.requestWithEntity(httppost, wholeQuery.toString());
 		JsonObject json = new JsonParser().parse(res).getAsJsonObject();
 		return json.get("hits").getAsJsonObject();
 	}

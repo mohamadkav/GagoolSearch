@@ -12,11 +12,11 @@ import java.util.List;
  */
 public class Article {
     public static String ID_KEY = "id";
-    private static String TITLE_KEY = "title";
+    public static String TITLE_KEY = "title";
     private static String URL_KEY = "url";
-    private static String ABSTRACTION_KEY = "abstraction";
+    public static String ABSTRACTION_KEY = "abstraction";
     private static String REF_KEY = "referredURLs";
-    private static String TEXT_KEY = "allText";
+    public static String TEXT_KEY = "allText";
 
 
 
