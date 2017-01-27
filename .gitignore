@@ -10,3 +10,4 @@
 .idea/
 *.ipr
 *.iws
+/bin/
