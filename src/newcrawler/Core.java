@@ -14,6 +14,10 @@ import java.util.*;
  */
 public class Core {
     public static final int REQUIRED_DOC_COUNT = 100;
+    private static final int OUT_DEGREE=5;
+
+
+
     private static final String DOCS_JSON_DIR = "docs";
     private static final String JSON_FORMAT = ".json";
     private static final String FIRST_LINK = "https://fa.wikipedia.org/wiki/%D8%B3%D8%B9%D8%AF%DB%8C";
@@ -22,6 +26,7 @@ public class Core {
 
     private int nextDocId=0;
     private HashMap<String, Article> articles = new HashMap<>();
+    private HashMap<String,Integer> outDegree=new HashMap<>();
     public Core() {
         initializeJson();
     }
@@ -32,8 +37,16 @@ public class Core {
         System.out.println("Finished parsing initial docs");
         while(articles.size()<=REQUIRED_DOC_COUNT){
             List<String> keysAsArray = new ArrayList<>(articles.keySet());
-            Article article=articles.get(keysAsArray.get(random.nextInt(articles.size())));
-            doURL(article.getReferredURLs().get(random.nextInt(article.getReferredURLs().size())));
+            String url=keysAsArray.get(random.nextInt(articles.size()));
+            Article article=articles.get(url);
+            if(outDegree.get(url)!=null&&outDegree.get(url)>=OUT_DEGREE)
+                continue;
+            if(doURL(article.getReferredURLs().get(random.nextInt(article.getReferredURLs().size())))) {
+                if (outDegree.containsKey(url))
+                    outDegree.put(url, outDegree.get(url)+1);
+                else
+                    outDegree.put(url,1);
+            }
             double percentage=((double)(articles.size())/REQUIRED_DOC_COUNT)*100;
             System.out.println(round(percentage,2)+"%");
         }
@@ -48,10 +61,10 @@ public class Core {
         return (double) tmp / factor;
     }
 
-    private void doURL(String url){
+    private boolean doURL(String url){
         try {
             if(articles.containsKey(url))
-                return;
+                return false;
             Document document = Jsoup.connect(url).timeout(10000).get();
             String abs=Parser.getAbstractFromDoc(document);
             String allText=Parser.getAllTextFromDoc(document);
@@ -61,8 +74,10 @@ public class Core {
             Article article=new Article(title,url,docId,abs,allText,outLinks);
             makeJson(article);
             articles.put(url,article);
+            return true;
         }catch (Exception e){
             e.printStackTrace();
+            return false;
         }
     }
     private void initializeJson() {
